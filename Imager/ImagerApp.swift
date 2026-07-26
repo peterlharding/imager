@@ -133,6 +133,31 @@ private struct AppCommands: Commands {
                 .keyboardShortcut("1", modifiers: .command)
                 .disabled(zoomDisabled)
         }
+        CommandMenu("Image") {
+            Button("Crop to Selection") {
+                if let selection = zoom?.selection {
+                    model.crop(to: selection)
+                    zoom?.selection = nil
+                }
+            }
+            .keyboardShortcut("k", modifiers: .command)
+            .disabled(zoom?.canCrop != true)
+
+            Button("Revert to Original") { model.revert() }
+                .disabled(!model.canRevert)
+
+            Divider()
+
+            Button("Export…") {
+                guard let image = model.image else { return }
+                let base = model.url?.deletingPathExtension().lastPathComponent ?? "Image"
+                if let error = ImageExporter.run(image: image, suggestedName: "\(base)-export.png") {
+                    model.errorMessage = error
+                }
+            }
+            .keyboardShortcut("e", modifiers: [.command, .shift])
+            .disabled(model.image == nil)
+        }
     }
 
     private var zoomDisabled: Bool {

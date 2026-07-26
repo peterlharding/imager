@@ -10,6 +10,12 @@ final class ImageModel {
     var info: ImageInfo?
     var errorMessage: String?
 
+    /// The image as originally loaded, kept so edits (e.g. crop) can be reverted.
+    private(set) var originalImage: NSImage?
+
+    /// True when the working image differs from the original (an edit can be undone).
+    var canRevert: Bool { image != nil && image !== originalImage }
+
     // Folder browsing
     private(set) var folderURL: URL?
     private(set) var folderImages: [URL] = []
@@ -117,10 +123,28 @@ final class ImageModel {
             return
         }
         self.image = image
+        self.originalImage = image
         self.url = url
         self.info = ImageInfoExtractor.info(for: url)
         self.errorMessage = nil
         if record { recents.record(url) }
+    }
+
+    // MARK: - Editing
+
+    /// Crops the current image to a rectangle in image pixel coordinates (top-left origin).
+    func crop(to pixelRect: CGRect) {
+        guard let current = image,
+              let cg = current.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
+        let full = CGRect(x: 0, y: 0, width: cg.width, height: cg.height)
+        let rect = pixelRect.integral.intersection(full)
+        guard rect.width >= 1, rect.height >= 1, let cropped = cg.cropping(to: rect) else { return }
+        image = NSImage(cgImage: cropped, size: NSSize(width: cropped.width, height: cropped.height))
+    }
+
+    /// Restores the image as originally loaded, discarding edits.
+    func revert() {
+        if let originalImage { image = originalImage }
     }
 
     private func clearFolder() {

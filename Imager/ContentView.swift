@@ -52,6 +52,25 @@ struct ContentView: View {
                 }
             }
             if model.image != nil {
+                ToolbarItem(placement: .principal) {
+                    Picker("Tool", selection: toolBinding) {
+                        Image(systemName: "hand.draw").tag(ImageTool.pan)
+                        Image(systemName: "crop").tag(ImageTool.select)
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .help("Pan or Select tool")
+                }
+            }
+            if zoom.canCrop {
+                ToolbarItem(placement: .primaryAction) {
+                    Button { cropSelection() } label: {
+                        Label("Crop", systemImage: "crop")
+                    }
+                    .help("Crop to selection (⌘K)")
+                }
+            }
+            if model.image != nil {
                 ToolbarItemGroup(placement: .primaryAction) {
                     Button { zoom.zoomOut() } label: {
                         Label("Zoom Out", systemImage: "minus.magnifyingglass")
@@ -118,6 +137,18 @@ struct ContentView: View {
     }
 
     // MARK: - Bindings
+
+    /// Binding for the Pan/Select tool picker.
+    private var toolBinding: Binding<ImageTool> {
+        Binding(get: { zoom.tool }, set: { zoom.tool = $0 })
+    }
+
+    /// Crops the current image to the active selection, then clears it.
+    private func cropSelection() {
+        guard let selection = zoom.selection else { return }
+        model.crop(to: selection)
+        zoom.selection = nil
+    }
 
     /// Maps the split view's column visibility to a simple shown/hidden flag.
     private var columnVisibility: Binding<NavigationSplitViewVisibility> {

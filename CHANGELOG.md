@@ -9,6 +9,18 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-27
+
+See [release_notes/0.5.0.md](release_notes/0.5.0.md) for details.
+
+### Added
+
+- Crop: a Select tool (toolbar Pan/Select toggle) to draw a crop rectangle over the image
+  (create, move, and resize via handles), then Crop to Selection (⌘K).
+- Revert to Original restores the uncropped image; cropping is non-destructive in the view.
+- Export… (⇧⌘E) saves the current (possibly cropped) image to a new PNG/JPEG/TIFF file.
+  The original file is never modified.
+
 ## [0.4.0] - 2026-07-26
 
 See [release_notes/0.4.0.md](release_notes/0.4.0.md) for details.
@@ -60,7 +72,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://example.com/imager/compare/v0.4.0...HEAD
+[Unreleased]: https://example.com/imager/compare/v0.5.0...HEAD
+[0.5.0]: https://example.com/imager/releases/tag/v0.5.0
 [0.4.0]: https://example.com/imager/releases/tag/v0.4.0
 [0.3.0]: https://example.com/imager/releases/tag/v0.3.0
 [0.2.0]: https://example.com/imager/releases/tag/v0.2.0
