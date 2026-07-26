@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
@@ -132,7 +133,51 @@ enum ImageInfoExtractor {
         return ImageInfo(sections: sections)
     }
 
+    /// Builds info from an in-memory image (e.g. after cropping), reflecting the pixels actually
+    /// shown rather than the source file's metadata. EXIF/GPS are omitted as they no longer apply.
+    static func info(forEditedImage image: NSImage, source url: URL?) -> ImageInfo {
+        var sections: [InfoSection] = []
+
+        var file: [InfoItem] = []
+        if let url { file.append(InfoItem(label: "Name", value: url.lastPathComponent)) }
+        file.append(InfoItem(label: "State", value: "Edited (unsaved)"))
+        sections.append(InfoSection(title: "File", items: file))
+
+        if let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            var items: [InfoItem] = [
+                InfoItem(label: "Dimensions", value: "\(cg.width) × \(cg.height) px"),
+                InfoItem(label: "Megapixels", value: String(format: "%.1f MP", Double(cg.width * cg.height) / 1_000_000)),
+            ]
+            if let model = cg.colorSpace?.model {
+                items.append(InfoItem(label: "Color Model", value: colorModelName(model)))
+            }
+            items.append(InfoItem(label: "Bit Depth", value: "\(cg.bitsPerComponent) bits/component"))
+            items.append(InfoItem(label: "Alpha", value: hasAlpha(cg) ? "Yes" : "No"))
+            sections.append(InfoSection(title: "Image", items: items))
+        }
+
+        return ImageInfo(sections: sections)
+    }
+
     // MARK: - Helpers
+
+    private static func colorModelName(_ model: CGColorSpaceModel) -> String {
+        switch model {
+        case .rgb: return "RGB"
+        case .monochrome: return "Grayscale"
+        case .cmyk: return "CMYK"
+        case .lab: return "Lab"
+        case .indexed: return "Indexed"
+        default: return "Unknown"
+        }
+    }
+
+    private static func hasAlpha(_ cg: CGImage) -> Bool {
+        switch cg.alphaInfo {
+        case .none, .noneSkipFirst, .noneSkipLast: return false
+        default: return true
+        }
+    }
 
     private static func int(_ dict: [CFString: Any], _ key: CFString) -> Int? {
         (dict[key] as? NSNumber)?.intValue

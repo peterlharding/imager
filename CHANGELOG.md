@@ -9,6 +9,16 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-07-27
+
+See [release_notes/0.5.1.md](release_notes/0.5.1.md) for details.
+
+### Changed
+
+- The image info inspector now reflects the image currently shown: after cropping it reports the
+  cropped dimensions and marks the image as edited, instead of always showing the source file's data.
+- Saving a copy moved from Image ▸ Export… to File ▸ Save As… (⇧⌘S).
+
 ## [0.5.0] - 2026-07-27
 
 See [release_notes/0.5.0.md](release_notes/0.5.0.md) for details.
@@ -72,7 +82,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://example.com/imager/compare/v0.5.0...HEAD
+[Unreleased]: https://example.com/imager/compare/v0.5.1...HEAD
+[0.5.1]: https://example.com/imager/releases/tag/v0.5.1
 [0.5.0]: https://example.com/imager/releases/tag/v0.5.0
 [0.4.0]: https://example.com/imager/releases/tag/v0.4.0
 [0.3.0]: https://example.com/imager/releases/tag/v0.3.0

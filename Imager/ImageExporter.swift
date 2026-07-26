@@ -11,8 +11,8 @@ enum ImageExporter {
         panel.allowedContentTypes = [.png, .jpeg, .tiff]
         panel.canCreateDirectories = true
         panel.nameFieldStringValue = suggestedName
-        panel.message = "Export the image"
-        panel.prompt = "Export"
+        panel.message = "Save a copy of the image"
+        panel.prompt = "Save"
 
         guard panel.runModal() == .OK, let url = panel.url else { return nil }
         return write(image, to: url)

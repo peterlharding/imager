@@ -125,9 +125,20 @@ final class ImageModel {
         self.image = image
         self.originalImage = image
         self.url = url
-        self.info = ImageInfoExtractor.info(for: url)
         self.errorMessage = nil
+        updateInfo()
         if record { recents.record(url) }
+    }
+
+    /// Refreshes `info` to reflect the currently displayed image: the source file's full
+    /// metadata when unedited, or the in-memory image's metadata after an edit (e.g. crop).
+    private func updateInfo() {
+        guard let image else { info = nil; return }
+        if !canRevert, let url {
+            info = ImageInfoExtractor.info(for: url)
+        } else {
+            info = ImageInfoExtractor.info(forEditedImage: image, source: url)
+        }
     }
 
     // MARK: - Editing
@@ -140,11 +151,15 @@ final class ImageModel {
         let rect = pixelRect.integral.intersection(full)
         guard rect.width >= 1, rect.height >= 1, let cropped = cg.cropping(to: rect) else { return }
         image = NSImage(cgImage: cropped, size: NSSize(width: cropped.width, height: cropped.height))
+        updateInfo()
     }
 
     /// Restores the image as originally loaded, discarding edits.
     func revert() {
-        if let originalImage { image = originalImage }
+        if let originalImage {
+            image = originalImage
+            updateInfo()
+        }
     }
 
     private func clearFolder() {

@@ -92,6 +92,17 @@ private struct AppCommands: Commands {
             }
             .disabled(model.recents.items.isEmpty)
         }
+        CommandGroup(replacing: .saveItem) {
+            Button("Save As…") {
+                guard let image = model.image else { return }
+                let base = model.url?.deletingPathExtension().lastPathComponent ?? "Image"
+                if let error = ImageExporter.run(image: image, suggestedName: "\(base).png") {
+                    model.errorMessage = error
+                }
+            }
+            .keyboardShortcut("s", modifiers: [.command, .shift])
+            .disabled(model.image == nil)
+        }
         CommandGroup(after: .sidebar) {
             Button(sidebarVisible?.wrappedValue == true ? "Hide Thumbnails" : "Show Thumbnails") {
                 sidebarVisible?.wrappedValue.toggle()
@@ -145,18 +156,6 @@ private struct AppCommands: Commands {
 
             Button("Revert to Original") { model.revert() }
                 .disabled(!model.canRevert)
-
-            Divider()
-
-            Button("Export…") {
-                guard let image = model.image else { return }
-                let base = model.url?.deletingPathExtension().lastPathComponent ?? "Image"
-                if let error = ImageExporter.run(image: image, suggestedName: "\(base)-export.png") {
-                    model.errorMessage = error
-                }
-            }
-            .keyboardShortcut("e", modifiers: [.command, .shift])
-            .disabled(model.image == nil)
         }
     }
 
