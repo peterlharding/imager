@@ -8,6 +8,10 @@
 
 /* Begin PBXFileReference section */
 		1A0000000000000000000004 /* Imager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Imager.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A00000000000000000000D1 /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
+		1A00000000000000000000D2 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		1A00000000000000000000D3 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		1A00000000000000000000D4 /* release_notes */ = {isa = PBXFileReference; lastKnownFileType = folder; path = release_notes; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -29,8 +33,20 @@
 			isa = PBXGroup;
 			children = (
 				1A00000000000000000000A1 /* Imager */,
+				1A00000000000000000000D0 /* Documentation */,
 				1A0000000000000000000003 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		1A00000000000000000000D0 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+				1A00000000000000000000D1 /* CHANGELOG.md */,
+				1A00000000000000000000D4 /* release_notes */,
+				1A00000000000000000000D2 /* README.md */,
+				1A00000000000000000000D3 /* LICENSE */,
+			);
+			name = Documentation;
 			sourceTree = "<group>";
 		};
 		1A0000000000000000000003 /* Products */ = {
@@ -279,7 +295,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.performiq.Imager;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -325,7 +341,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.performiq.Imager;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

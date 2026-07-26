@@ -3,26 +3,59 @@ import UniformTypeIdentifiers
 
 struct ContentView: View {
     @Environment(ImageModel.self) private var model
+    @Environment(\.openWindow) private var openWindow
+    @State private var showInfo = false
+    @State private var showSidebar = false
 
     var body: some View {
         Group {
-            if let image = model.image {
-                ImageCanvas(image: image)
+            if model.canBrowse {
+                NavigationSplitView(columnVisibility: columnVisibility) {
+                    thumbnailSidebar
+                } detail: {
+                    mainArea
+                }
             } else {
-                EmptyState()
+                mainArea
             }
         }
-        .frame(minWidth: 480, minHeight: 360)
+        .frame(minWidth: 640, minHeight: 420)
         .navigationTitle(model.url?.lastPathComponent ?? "Imager")
+        .inspector(isPresented: $showInfo) {
+            InfoInspector(info: model.info)
+                .inspectorColumnWidth(min: 240, ideal: 280, max: 420)
+        }
+        .focusedSceneValue(\.inspectorVisible, $showInfo)
+        .focusedSceneValue(\.sidebarVisible, $showSidebar)
+        .onAppear { model.setWindowOpener { openWindow(id: "main") } }
+        .onChange(of: model.folderURL) { showSidebar = model.canBrowse }
         .toolbar {
+            if model.canBrowse {
+                ToolbarItem(placement: .navigation) {
+                    Button {
+                        showSidebar.toggle()
+                    } label: {
+                        Label("Thumbnails", systemImage: "sidebar.squares.left")
+                    }
+                    .help("Show or hide thumbnails")
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     if let url = ImageOpener.run() {
                         model.load(from: url)
                     }
                 } label: {
-                    Label("Open", systemImage: "folder")
+                    Label("Open", systemImage: "photo")
                 }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showInfo.toggle()
+                } label: {
+                    Label("Image Info", systemImage: "info.circle")
+                }
+                .help("Show image info")
             }
         }
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
@@ -41,14 +74,94 @@ struct ContentView: View {
         }
     }
 
-    /// Loads the first dropped file URL as an image.
+    // MARK: - Panes
+
+    @ViewBuilder private var mainArea: some View {
+        if let image = model.image {
+            ImageCanvas(image: image)
+        } else {
+            EmptyState()
+        }
+    }
+
+    private var thumbnailSidebar: some View {
+        List(selection: thumbnailSelection) {
+            ForEach(model.folderImages, id: \.self) { url in
+                ThumbnailRow(url: url)
+                    .tag(url)
+            }
+        }
+        .navigationSplitViewColumnWidth(min: 150, ideal: 190, max: 300)
+    }
+
+    // MARK: - Bindings
+
+    /// Maps the split view's column visibility to a simple shown/hidden flag.
+    private var columnVisibility: Binding<NavigationSplitViewVisibility> {
+        Binding(
+            get: { showSidebar ? .all : .detailOnly },
+            set: { showSidebar = ($0 != .detailOnly) }
+        )
+    }
+
+    /// Bridges the thumbnail List selection (by URL) to the model's index-based selection.
+    private var thumbnailSelection: Binding<URL?> {
+        Binding(
+            get: {
+                guard let i = model.selectionIndex, model.folderImages.indices.contains(i) else { return nil }
+                return model.folderImages[i]
+            },
+            set: { url in
+                if let url, let i = model.folderImages.firstIndex(of: url) {
+                    model.select(i)
+                }
+            }
+        )
+    }
+
+    /// Opens the first dropped URL - an image file, or a folder to browse.
     private func loadFirstImage(from providers: [NSItemProvider]) -> Bool {
         guard let provider = providers.first else { return false }
         _ = provider.loadObject(ofClass: URL.self) { url, _ in
             guard let url else { return }
-            DispatchQueue.main.async { model.load(from: url) }
+            DispatchQueue.main.async { model.open(url) }
         }
         return true
+    }
+}
+
+/// A thumbnail + filename row in the folder sidebar.
+private struct ThumbnailRow: View {
+    let url: URL
+    @State private var thumbnail: NSImage?
+
+    var body: some View {
+        HStack(spacing: 8) {
+            thumbnailImage
+                .frame(width: 40, height: 40)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+            Text(url.lastPathComponent)
+                .lineLimit(1)
+                .truncationMode(.middle)
+        }
+        .task(id: url) {
+            thumbnail = await ThumbnailProvider.shared.thumbnail(for: url)
+        }
+    }
+
+    @ViewBuilder private var thumbnailImage: some View {
+        if let thumbnail {
+            Image(nsImage: thumbnail)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        } else {
+            RoundedRectangle(cornerRadius: 4)
+                .fill(.quaternary)
+                .overlay {
+                    Image(systemName: "photo")
+                        .foregroundStyle(.secondary)
+                }
+        }
     }
 }
 
@@ -73,7 +186,7 @@ private struct EmptyState: View {
         ContentUnavailableView {
             Label("No Image Open", systemImage: "photo")
         } description: {
-            Text("Open an image with ⌘O, the toolbar button, or drag a file here.")
+            Text("Open an image with ⌘O or a folder with ⇧⌘O, use the toolbar, or drag a file here.")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.background)

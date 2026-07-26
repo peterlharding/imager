@@ -9,6 +9,35 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-26
+
+See [release_notes/0.3.0.md](release_notes/0.3.0.md) for details.
+
+### Added
+
+- Folder browsing: File ▸ Open Folder… (⇧⌘O) loads a folder's images into a thumbnail
+  sidebar (QuickLook thumbnails, Finder-style name sort). Select a thumbnail to view it.
+- Navigate images with ← / → (View ▸ Previous/Next Image) or the sidebar.
+- Toggle the thumbnail sidebar from the toolbar or View ▸ Show/Hide Thumbnails (⌥⌘S).
+- Dragging a folder onto the window browses it.
+
+## [0.2.0] - 2026-07-26
+
+See [release_notes/0.2.0.md](release_notes/0.2.0.md) for details.
+
+### Added
+
+- Image info inspector showing file, image, camera (EXIF), and location (GPS) metadata.
+  Toggle it with the toolbar button or View ▸ Show Image Info (⌘I).
+- Recent files: File ▸ Open Recent lists recently opened images and reopens them,
+  persisting access across launches via security-scoped bookmarks. Includes Clear Menu.
+- Open images from Finder ("Open With…") or the `open` command; opened files are added to recents.
+
+### Fixed
+
+- Opening an image after the window was closed now reopens a window to display it.
+  The app uses a single-window scene, stays running when the window is closed, and reopens on Dock click.
+
 ## [0.1.0] - 2026-07-26
 
 Initial release.
@@ -21,5 +50,7 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://example.com/imager/compare/v0.1.0...HEAD
+[Unreleased]: https://example.com/imager/compare/v0.3.0...HEAD
+[0.3.0]: https://example.com/imager/releases/tag/v0.3.0
+[0.2.0]: https://example.com/imager/releases/tag/v0.2.0
 [0.1.0]: https://example.com/imager/releases/tag/v0.1.0
