@@ -74,6 +74,22 @@ The `CURRENT_PROJECT_VERSION` build setting is the build number and can be bumpe
    gh release create v<version> --title "Imager <version>" --notes-file release_notes/<version>.md
    ```
 
+## Commit conventions
+
+Use a short prefix on commit messages so history is easy to scan.
+
+- `Release <version>` for the single commit that cuts a release (step 6 above).
+- `feat: <summary>` for a new feature, `fix: <summary>` for a bug fix.
+- `docs: <summary>` for documentation and process changes that are not part of a release.
+
+Documentation or process changes (this file, README, the Xcode Documentation group) are committed
+on their own with a `docs:` message rather than being folded into a release commit. For example:
+
+```sh
+git add RELEASING.md Imager.xcodeproj/project.pbxproj
+git commit -m "docs: add release process"
+```
+
 ## Notes
 
 - The repo-level docs (`CHANGELOG.md`, `RELEASING.md`, `README.md`, `LICENSE`, `release_notes/`) live at the repo root, outside the Xcode-synchronized `Imager/` source group. They are visible in Xcode under the `Documentation` group but are not compiled into the app.
