@@ -45,6 +45,13 @@ struct ImagerApp: App {
         .commands {
             AppCommands(model: model)
         }
+
+        Window("About \(AboutView.appName)", id: "about") {
+            AboutView()
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
+        .commandsRemoved()
     }
 }
 
@@ -59,6 +66,10 @@ private struct AppCommands: Commands {
     @FocusedValue(\.zoomController) private var zoom
 
     var body: some Commands {
+        // Replace the standard About panel with our custom About window.
+        CommandGroup(replacing: .appInfo) {
+            Button("About \(AboutView.appName)") { openWindow(id: "about") }
+        }
         // Replace the default "New" item with an "Open…" command (⌘O).
         CommandGroup(replacing: .newItem) {
             Button("Open…") {

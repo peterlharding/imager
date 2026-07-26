@@ -9,6 +9,15 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-27
+
+See [release_notes/0.7.0.md](release_notes/0.7.0.md) for details.
+
+### Added
+
+- Custom About window (Apple menu ▸ About Imager) showing the app icon, version and build number,
+  a short description, and copyright.
+
 ## [0.6.1] - 2026-07-27
 
 See [release_notes/0.6.1.md](release_notes/0.6.1.md) for details.
@@ -106,7 +115,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://example.com/imager/compare/v0.6.1...HEAD
+[Unreleased]: https://example.com/imager/compare/v0.7.0...HEAD
+[0.7.0]: https://example.com/imager/releases/tag/v0.7.0
 [0.6.1]: https://example.com/imager/releases/tag/v0.6.1
 [0.6.0]: https://example.com/imager/releases/tag/v0.6.0
 [0.5.1]: https://example.com/imager/releases/tag/v0.5.1
