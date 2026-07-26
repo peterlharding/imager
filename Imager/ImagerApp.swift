@@ -122,6 +122,20 @@ private struct AppCommands: Commands {
                 }
             }
             .disabled(model.image == nil)
+
+            Divider()
+
+            Button("Show in Finder") {
+                if let url = model.url { FileActions.showInFinder(url) }
+            }
+            .keyboardShortcut("r", modifiers: [.command, .shift])
+            .disabled(model.url == nil)
+
+            Button("Copy Path") {
+                if let url = model.url { FileActions.copyPath(url) }
+            }
+            .keyboardShortcut("c", modifiers: [.command, .option])
+            .disabled(model.url == nil)
         }
         CommandGroup(after: .sidebar) {
             Button(sidebarVisible?.wrappedValue == true ? "Hide Thumbnails" : "Show Thumbnails") {

@@ -23,7 +23,7 @@ struct ContentView: View {
         .frame(minWidth: 640, minHeight: 420)
         .navigationTitle(model.url?.lastPathComponent ?? "Imager")
         .inspector(isPresented: $showInfo) {
-            InfoInspector(info: model.info)
+            InfoInspector(info: model.info, url: model.url)
                 .inspectorColumnWidth(min: 240, ideal: 280, max: 420)
         }
         .focusedSceneValue(\.inspectorVisible, $showInfo)

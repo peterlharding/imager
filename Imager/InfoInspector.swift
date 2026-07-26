@@ -3,6 +3,7 @@ import SwiftUI
 /// Trailing inspector panel that lists metadata for the current image.
 struct InfoInspector: View {
     let info: ImageInfo?
+    let url: URL?
 
     var body: some View {
         if let info, !info.isEmpty {
@@ -21,6 +22,30 @@ struct InfoInspector: View {
                 }
             }
             .listStyle(.inset)
+            .safeAreaInset(edge: .bottom) {
+                if let url {
+                    HStack {
+                        Button {
+                            FileActions.showInFinder(url)
+                        } label: {
+                            Label("Show in Finder", systemImage: "folder")
+                        }
+                        .help("Show in Finder")
+                        Spacer()
+                        Button {
+                            FileActions.copyPath(url)
+                        } label: {
+                            Label("Copy Path", systemImage: "doc.on.clipboard")
+                        }
+                        .help("Copy path to clipboard")
+                    }
+                    .buttonStyle(.borderless)
+                    .labelStyle(.iconOnly)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.bar)
+                }
+            }
         } else {
             ContentUnavailableView {
                 Label("No Image Info", systemImage: "info.circle")

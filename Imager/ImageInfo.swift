@@ -32,6 +32,7 @@ enum ImageInfoExtractor {
 
         // --- File ---
         var file: [InfoItem] = [InfoItem(label: "Name", value: url.lastPathComponent)]
+        file.append(InfoItem(label: "Where", value: displayPath(of: url)))
         if let bytes = fileSize(of: url) {
             file.append(InfoItem(label: "Size", value: byteString(bytes)))
         }
@@ -139,7 +140,10 @@ enum ImageInfoExtractor {
         var sections: [InfoSection] = []
 
         var file: [InfoItem] = []
-        if let url { file.append(InfoItem(label: "Name", value: url.lastPathComponent)) }
+        if let url {
+            file.append(InfoItem(label: "Name", value: url.lastPathComponent))
+            file.append(InfoItem(label: "Where", value: displayPath(of: url)))
+        }
         file.append(InfoItem(label: "State", value: "Edited (unsaved)"))
         sections.append(InfoSection(title: "File", items: file))
 
@@ -189,6 +193,11 @@ enum ImageInfoExtractor {
 
     private static func fileSize(of url: URL) -> Int? {
         (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize
+    }
+
+    /// The containing folder path, with the home directory abbreviated to `~`.
+    private static func displayPath(of url: URL) -> String {
+        (url.deletingLastPathComponent().path as NSString).abbreviatingWithTildeInPath
     }
 
     private static func byteString(_ bytes: Int) -> String {
