@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Handles image files opened from Finder ("Open With…") or `open -a`, routing
 /// them through the same load path as the in-app open command, and keeps the
@@ -94,13 +95,32 @@ private struct AppCommands: Commands {
         }
         CommandGroup(replacing: .saveItem) {
             Button("Save As…") {
-                guard let image = model.image else { return }
-                let base = model.url?.deletingPathExtension().lastPathComponent ?? "Image"
-                if let error = ImageExporter.run(image: image, suggestedName: "\(base).png") {
+                guard let image = model.image, let url = model.url else { return }
+                let type = UTType(filenameExtension: url.pathExtension) ?? .png
+                let ext = url.pathExtension.isEmpty ? (type.preferredFilenameExtension ?? "png") : url.pathExtension
+                let name = "\(url.deletingPathExtension().lastPathComponent).\(ext)"
+                if let error = ImageExporter.run(image: image, defaultName: name, contentType: type) {
                     model.errorMessage = error
                 }
             }
             .keyboardShortcut("s", modifiers: [.command, .shift])
+            .disabled(model.image == nil)
+
+            Menu("Export As") {
+                ForEach(ImageFormat.allCases) { format in
+                    Button(format.displayName) {
+                        guard let image = model.image else { return }
+                        let base = model.url?.deletingPathExtension().lastPathComponent ?? "Image"
+                        if let error = ImageExporter.run(
+                            image: image,
+                            defaultName: "\(base).\(format.fileExtension)",
+                            contentType: format.contentType
+                        ) {
+                            model.errorMessage = error
+                        }
+                    }
+                }
+            }
             .disabled(model.image == nil)
         }
         CommandGroup(after: .sidebar) {

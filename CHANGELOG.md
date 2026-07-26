@@ -9,6 +9,18 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-27
+
+See [release_notes/0.6.0.md](release_notes/0.6.0.md) for details.
+
+### Added
+
+- Export As ▸ PNG, JPEG, GIF, TIFF, or HEIC (File menu) to save a copy in a chosen format.
+
+### Changed
+
+- Save As… now defaults to the source image's format instead of always saving as PNG.
+
 ## [0.5.1] - 2026-07-27
 
 See [release_notes/0.5.1.md](release_notes/0.5.1.md) for details.
@@ -82,7 +94,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://example.com/imager/compare/v0.5.1...HEAD
+[Unreleased]: https://example.com/imager/compare/v0.6.0...HEAD
+[0.6.0]: https://example.com/imager/releases/tag/v0.6.0
 [0.5.1]: https://example.com/imager/releases/tag/v0.5.1
 [0.5.0]: https://example.com/imager/releases/tag/v0.5.0
 [0.4.0]: https://example.com/imager/releases/tag/v0.4.0
