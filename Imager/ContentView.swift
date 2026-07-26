@@ -120,7 +120,7 @@ struct ContentView: View {
     @ViewBuilder private var mainArea: some View {
         if let image = model.image {
             ZoomableImageView(image: image, controller: zoom)
-                .background(.background)
+                .background { BackgroundFill() }
         } else {
             EmptyState()
         }

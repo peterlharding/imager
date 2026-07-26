@@ -52,6 +52,10 @@ struct ImagerApp: App {
         .windowResizability(.contentSize)
         .defaultPosition(.center)
         .commandsRemoved()
+
+        Settings {
+            SettingsView()
+        }
     }
 }
 

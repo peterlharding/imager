@@ -9,6 +9,17 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-07-27
+
+See [release_notes/0.8.0.md](release_notes/0.8.0.md) for details.
+
+### Added
+
+- Settings window (⌘,) with an Appearance pane to set the image viewing area's background:
+  a solid colour (preset swatches + RGB sliders) or a checkerboard texture, with an opacity
+  slider and a live preview.
+- App icon.
+
 ## [0.7.0] - 2026-07-27
 
 See [release_notes/0.7.0.md](release_notes/0.7.0.md) for details.
@@ -115,7 +126,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://example.com/imager/compare/v0.7.0...HEAD
+[Unreleased]: https://example.com/imager/compare/v0.8.0...HEAD
+[0.8.0]: https://example.com/imager/releases/tag/v0.8.0
 [0.7.0]: https://example.com/imager/releases/tag/v0.7.0
 [0.6.1]: https://example.com/imager/releases/tag/v0.6.1
 [0.6.0]: https://example.com/imager/releases/tag/v0.6.0
