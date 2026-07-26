@@ -6,6 +6,7 @@ struct ContentView: View {
     @Environment(\.openWindow) private var openWindow
     @State private var showInfo = false
     @State private var showSidebar = false
+    @State private var zoom = ZoomController()
 
     var body: some View {
         Group {
@@ -27,6 +28,7 @@ struct ContentView: View {
         }
         .focusedSceneValue(\.inspectorVisible, $showInfo)
         .focusedSceneValue(\.sidebarVisible, $showSidebar)
+        .focusedSceneValue(\.zoomController, zoom)
         .onAppear { model.setWindowOpener { openWindow(id: "main") } }
         .onChange(of: model.folderURL) { showSidebar = model.canBrowse }
         .toolbar {
@@ -47,6 +49,26 @@ struct ContentView: View {
                     }
                 } label: {
                     Label("Open", systemImage: "photo")
+                }
+            }
+            if model.image != nil {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    Button { zoom.zoomOut() } label: {
+                        Label("Zoom Out", systemImage: "minus.magnifyingglass")
+                    }
+                    .help("Zoom out (⌘-)")
+
+                    Button { zoom.zoomToFit() } label: {
+                        Text("\(Int((zoom.magnification * 100).rounded()))%")
+                            .monospacedDigit()
+                            .frame(minWidth: 44)
+                    }
+                    .help("Zoom to fit (⌘0)")
+
+                    Button { zoom.zoomIn() } label: {
+                        Label("Zoom In", systemImage: "plus.magnifyingglass")
+                    }
+                    .help("Zoom in (⌘=)")
                 }
             }
             ToolbarItem(placement: .primaryAction) {
@@ -78,7 +100,8 @@ struct ContentView: View {
 
     @ViewBuilder private var mainArea: some View {
         if let image = model.image {
-            ImageCanvas(image: image)
+            ZoomableImageView(image: image, controller: zoom)
+                .background(.background)
         } else {
             EmptyState()
         }
@@ -162,21 +185,6 @@ private struct ThumbnailRow: View {
                         .foregroundStyle(.secondary)
                 }
         }
-    }
-}
-
-/// Displays the loaded image, scaled to fit while preserving aspect ratio.
-private struct ImageCanvas: View {
-    let image: NSImage
-
-    var body: some View {
-        Image(nsImage: image)
-            .resizable()
-            .interpolation(.high)
-            .aspectRatio(contentMode: .fit)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding()
-            .background(.background)
     }
 }
 

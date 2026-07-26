@@ -39,6 +39,14 @@
 			);
 			sourceTree = "<group>";
 		};
+		1A0000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000000000000000000004 /* Imager.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		1A00000000000000000000D0 /* Documentation */ = {
 			isa = PBXGroup;
 			children = (
@@ -49,14 +57,6 @@
 				1A00000000000000000000D3 /* LICENSE */,
 			);
 			name = Documentation;
-			sourceTree = "<group>";
-		};
-		1A0000000000000000000003 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				1A0000000000000000000004 /* Imager.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -297,7 +297,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.3.0;
+				MARKETING_VERSION = 0.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.performiq.Imager;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -343,7 +343,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.3.0;
+				MARKETING_VERSION = 0.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.performiq.Imager;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

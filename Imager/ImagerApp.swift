@@ -55,6 +55,7 @@ private struct AppCommands: Commands {
     @Environment(\.openWindow) private var openWindow
     @FocusedValue(\.inspectorVisible) private var inspectorVisible
     @FocusedValue(\.sidebarVisible) private var sidebarVisible
+    @FocusedValue(\.zoomController) private var zoom
 
     var body: some Commands {
         // Replace the default "New" item with an "Open…" command (⌘O).
@@ -113,6 +114,28 @@ private struct AppCommands: Commands {
             Button("Next Image") { model.showNext() }
                 .keyboardShortcut(.rightArrow, modifiers: [])
                 .disabled(!model.canBrowse)
+
+            Divider()
+
+            Button("Zoom In") { zoom?.zoomIn() }
+                .keyboardShortcut("=", modifiers: .command)
+                .disabled(zoomDisabled)
+
+            Button("Zoom Out") { zoom?.zoomOut() }
+                .keyboardShortcut("-", modifiers: .command)
+                .disabled(zoomDisabled)
+
+            Button("Zoom to Fit") { zoom?.zoomToFit() }
+                .keyboardShortcut("0", modifiers: .command)
+                .disabled(zoomDisabled)
+
+            Button("Actual Size") { zoom?.actualSize() }
+                .keyboardShortcut("1", modifiers: .command)
+                .disabled(zoomDisabled)
         }
+    }
+
+    private var zoomDisabled: Bool {
+        zoom == nil || model.image == nil
     }
 }

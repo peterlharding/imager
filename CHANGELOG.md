@@ -9,6 +9,16 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-26
+
+See [release_notes/0.4.0.md](release_notes/0.4.0.md) for details.
+
+### Added
+
+- Zoom and pan: scroll to zoom (centered at the cursor), drag to pan, and pinch to zoom.
+  Zoom In (⌘=), Zoom Out (⌘-), Zoom to Fit (⌘0), and Actual Size / 100% (⌘1), plus toolbar controls
+  showing the current zoom percentage. Images open zoomed to fit (small images shown at 100%).
+
 ## [0.3.0] - 2026-07-26
 
 See [release_notes/0.3.0.md](release_notes/0.3.0.md) for details.
@@ -50,7 +60,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://example.com/imager/compare/v0.3.0...HEAD
+[Unreleased]: https://example.com/imager/compare/v0.4.0...HEAD
+[0.4.0]: https://example.com/imager/releases/tag/v0.4.0
 [0.3.0]: https://example.com/imager/releases/tag/v0.3.0
 [0.2.0]: https://example.com/imager/releases/tag/v0.2.0
 [0.1.0]: https://example.com/imager/releases/tag/v0.1.0
