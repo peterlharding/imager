@@ -77,12 +77,33 @@ struct Checkerboard: View {
 
 /// The Settings window contents (tabbed for future expansion).
 struct SettingsView: View {
+    let recents: RecentFilesStore
+
     var body: some View {
         TabView {
+            GeneralSettings(recents: recents)
+                .tabItem { Label("General", systemImage: "gearshape") }
             AppearanceSettings()
                 .tabItem { Label("Appearance", systemImage: "paintpalette") }
         }
         .frame(width: 460)
+    }
+}
+
+/// General settings.
+struct GeneralSettings: View {
+    @Bindable var recents: RecentFilesStore
+
+    var body: some View {
+        Form {
+            LabeledContent("Recent files to remember") {
+                Stepper(value: $recents.maxCount, in: RecentFilesStore.minCount...RecentFilesStore.maxCountLimit) {
+                    Text("\(recents.maxCount)").monospacedDigit()
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .scenePadding()
     }
 }
 

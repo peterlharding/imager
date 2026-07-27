@@ -9,6 +9,15 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-07-27
+
+See [release_notes/0.9.1.md](release_notes/0.9.1.md) for details.
+
+### Added
+
+- Settings ▸ General: choose how many recent files to remember (1–50). Lowering it trims the
+  Open Recent list immediately.
+
 ## [0.9.0] - 2026-07-27
 
 See [release_notes/0.9.0.md](release_notes/0.9.0.md) for details.
@@ -139,7 +148,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://example.com/imager/compare/v0.9.0...HEAD
+[Unreleased]: https://example.com/imager/compare/v0.9.1...HEAD
+[0.9.1]: https://example.com/imager/releases/tag/v0.9.1
 [0.9.0]: https://example.com/imager/releases/tag/v0.9.0
 [0.8.0]: https://example.com/imager/releases/tag/v0.8.0
 [0.7.0]: https://example.com/imager/releases/tag/v0.7.0

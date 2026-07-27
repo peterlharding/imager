@@ -54,7 +54,7 @@ struct ImagerApp: App {
         .commandsRemoved()
 
         Settings {
-            SettingsView()
+            SettingsView(recents: model.recents)
         }
     }
 }

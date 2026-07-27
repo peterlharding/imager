@@ -17,13 +17,38 @@ final class RecentFilesStore {
 
     private(set) var items: [Item] = []
 
-    private let maxItems = 10
+    /// How many recent files to remember. Persisted; changing it trims the list immediately.
+    var maxCount: Int {
+        didSet {
+            let clamped = min(max(maxCount, Self.minCount), Self.maxCountLimit)
+            if clamped != maxCount { maxCount = clamped; return }
+            defaults.set(maxCount, forKey: Self.maxCountKey)
+            trim()
+        }
+    }
+
+    static let minCount = 1
+    static let maxCountLimit = 50
+    static let defaultCount = 10
+    private static let maxCountKey = "recents.maxCount"
+
     private let defaultsKey = "recentFileBookmarks"
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        let stored = defaults.integer(forKey: Self.maxCountKey)
+        self.maxCount = stored == 0 ? Self.defaultCount : min(max(stored, Self.minCount), Self.maxCountLimit)
         loadFromDefaults()
+        trim()
+    }
+
+    /// Drops items beyond the current limit, keeping the most recent.
+    private func trim() {
+        if items.count > maxCount {
+            items = Array(items.prefix(maxCount))
+            persist()
+        }
     }
 
     /// Records a freshly opened file at the top of the list. Must be called
@@ -33,8 +58,8 @@ final class RecentFilesStore {
         guard let bookmark = makeBookmark(for: url) else { return }
         var updated = items.filter { $0.url != url }
         updated.insert(Item(url: url, bookmark: bookmark), at: 0)
-        if updated.count > maxItems {
-            updated = Array(updated.prefix(maxItems))
+        if updated.count > maxCount {
+            updated = Array(updated.prefix(maxCount))
         }
         items = updated
         persist()
