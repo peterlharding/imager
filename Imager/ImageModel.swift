@@ -154,6 +154,20 @@ final class ImageModel {
         updateInfo()
     }
 
+    /// Rotates the current image by the given angle in degrees (positive = clockwise).
+    func rotate(byDegreesClockwise degrees: Double) {
+        guard let current = image, let rotated = ImageTransform.rotated(current, degreesClockwise: degrees) else { return }
+        image = rotated
+        updateInfo()
+    }
+
+    /// Mirrors the current image horizontally or vertically.
+    func flip(horizontal: Bool) {
+        guard let current = image, let flipped = ImageTransform.flipped(current, horizontal: horizontal) else { return }
+        image = flipped
+        updateInfo()
+    }
+
     /// Restores the image as originally loaded, discarding edits.
     func revert() {
         if let originalImage {

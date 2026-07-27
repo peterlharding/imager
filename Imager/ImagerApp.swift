@@ -203,6 +203,27 @@ private struct AppCommands: Commands {
             .keyboardShortcut("k", modifiers: .command)
             .disabled(zoom?.canCrop != true)
 
+            Divider()
+
+            Button("Rotate Left") { model.rotate(byDegreesClockwise: -90) }
+                .keyboardShortcut("l", modifiers: .command)
+                .disabled(model.image == nil)
+
+            Button("Rotate Right") { model.rotate(byDegreesClockwise: 90) }
+                .keyboardShortcut("r", modifiers: .command)
+                .disabled(model.image == nil)
+
+            Button("Rotate 180°") { model.rotate(byDegreesClockwise: 180) }
+                .disabled(model.image == nil)
+
+            Button("Flip Horizontal") { model.flip(horizontal: true) }
+                .disabled(model.image == nil)
+
+            Button("Flip Vertical") { model.flip(horizontal: false) }
+                .disabled(model.image == nil)
+
+            Divider()
+
             Button("Revert to Original") { model.revert() }
                 .disabled(!model.canRevert)
         }

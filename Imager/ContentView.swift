@@ -6,6 +6,7 @@ struct ContentView: View {
     @Environment(\.openWindow) private var openWindow
     @State private var showInfo = false
     @State private var showSidebar = false
+    @State private var showRotate = false
     @State private var zoom = ZoomController()
 
     var body: some View {
@@ -88,6 +89,27 @@ struct ContentView: View {
                         Label("Zoom In", systemImage: "plus.magnifyingglass")
                     }
                     .help("Zoom in (⌘=)")
+                }
+            }
+            if model.image != nil {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showRotate.toggle()
+                    } label: {
+                        Label("Rotate", systemImage: "crop.rotate")
+                    }
+                    .help("Rotate or flip")
+                    .popover(isPresented: $showRotate, arrowEdge: .bottom) {
+                        RotatePopover(model: model)
+                    }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        NSApp.keyWindow?.toggleFullScreen(nil)
+                    } label: {
+                        Label("Full Screen", systemImage: "arrow.up.left.and.arrow.down.right")
+                    }
+                    .help("Enter full screen")
                 }
             }
             ToolbarItem(placement: .primaryAction) {

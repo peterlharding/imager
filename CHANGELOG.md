@@ -9,6 +9,19 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-27
+
+See [release_notes/0.9.0.md](release_notes/0.9.0.md) for details.
+
+### Added
+
+- Rotate and flip: Rotate Left/Right (⌘L / ⌘R), Rotate 180°, Flip Horizontal/Vertical, plus a fine
+  rotation control (a degree stepper with left/right nudge) for small-angle straightening.
+  Available from the Image menu and a toolbar Rotate popover. Non-destructive: Revert to Original
+  restores the image and Export saves the transformed result.
+- Full Screen: a toolbar button (and the standard View ▸ Enter Full Screen) to view images
+  full screen.
+
 ## [0.8.0] - 2026-07-27
 
 See [release_notes/0.8.0.md](release_notes/0.8.0.md) for details.
@@ -126,7 +139,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://example.com/imager/compare/v0.8.0...HEAD
+[Unreleased]: https://example.com/imager/compare/v0.9.0...HEAD
+[0.9.0]: https://example.com/imager/releases/tag/v0.9.0
 [0.8.0]: https://example.com/imager/releases/tag/v0.8.0
 [0.7.0]: https://example.com/imager/releases/tag/v0.7.0
 [0.6.1]: https://example.com/imager/releases/tag/v0.6.1
