@@ -9,6 +9,15 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-07-27
+
+See [release_notes/0.10.0.md](release_notes/0.10.0.md) for details.
+
+### Added
+
+- Finder integration: Imager registers as an image and folder viewer, so it appears in Finder's
+  "Open With" menu, opens double-clicked files, and accepts files or folders dropped on its icon.
+
 ## [0.9.2] - 2026-07-27
 
 See [release_notes/0.9.2.md](release_notes/0.9.2.md) for details.
@@ -157,7 +166,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://example.com/imager/compare/v0.9.2...HEAD
+[Unreleased]: https://example.com/imager/compare/v0.10.0...HEAD
+[0.10.0]: https://example.com/imager/releases/tag/v0.10.0
 [0.9.2]: https://example.com/imager/releases/tag/v0.9.2
 [0.9.1]: https://example.com/imager/releases/tag/v0.9.1
 [0.9.0]: https://example.com/imager/releases/tag/v0.9.0
