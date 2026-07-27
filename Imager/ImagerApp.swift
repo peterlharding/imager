@@ -107,6 +107,12 @@ private struct AppCommands: Commands {
                 }
             }
             .disabled(model.recents.items.isEmpty)
+
+            Divider()
+
+            Button("Close Image") { model.close() }
+                .keyboardShortcut("w", modifiers: .command)
+                .disabled(model.image == nil)
         }
         CommandGroup(replacing: .saveItem) {
             Button("Save As…") {

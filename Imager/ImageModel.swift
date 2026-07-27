@@ -54,6 +54,16 @@ final class ImageModel {
         }
     }
 
+    /// Clears the current image, returning to the empty state (the window stays open).
+    func close() {
+        image = nil
+        originalImage = nil
+        url = nil
+        info = nil
+        errorMessage = nil
+        clearFolder()
+    }
+
     /// Opens a single image file, showing just that image (clears any folder browsing).
     func load(from url: URL) {
         ensureWindow()
