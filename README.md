@@ -29,6 +29,24 @@ The project is configured with a development team for local signing.
 If you are building under your own Apple ID, change **Signing & Capabilities ▸ Team** in Xcode to
 your own team first.
 
+## Testing
+
+Unit tests live in `ImagerTests/` and are written with
+[Swift Testing](https://developer.apple.com/documentation/testing).
+Run them in Xcode with **⌘U**, or from the command line:
+
+```sh
+xcodebuild test -project Imager.xcodeproj -scheme Imager -destination 'platform=macOS'
+```
+
+The tests are hosted by the app and use `@testable import Imager`, so they can reach internal
+types directly.
+They cover the pixel transforms, the unsaved-edit state machine, the recent-files limit, and the
+export format table.
+Anything that needs a file on disk writes to a temporary directory, and anything that touches
+preferences is pointed at a throwaway defaults suite, so a test run never disturbs your own
+recent files or settings.
+
 ## Features
 
 ### Viewing
@@ -124,6 +142,7 @@ folder in that case.
 | Path | Contents |
 | --- | --- |
 | `Imager/` | Application source, an Xcode filesystem-synchronized group |
+| `ImagerTests/` | Unit tests, also a filesystem-synchronized group |
 | `Imager.xcodeproj` | Xcode project |
 | `Info.plist` | Bundle configuration, including the Finder document types |
 | `CHANGELOG.md` | All notable changes, following Keep a Changelog |

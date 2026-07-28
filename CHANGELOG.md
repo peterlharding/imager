@@ -9,6 +9,12 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+### Added
+
+- Unit test harness: an `ImagerTests` target built on Swift Testing, with a shared Xcode scheme so
+  `xcodebuild test` works from a fresh clone. Initial suites cover the pixel transforms, the
+  unsaved-edit state machine, the recent-files limit, and the export format table.
+
 ## [0.12.0] - 2026-07-28
 
 See [release_notes/0.12.0.md](release_notes/0.12.0.md) for details.
