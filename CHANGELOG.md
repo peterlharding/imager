@@ -9,6 +9,18 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-07-28
+
+See [release_notes/0.12.0.md](release_notes/0.12.0.md) for details.
+
+### Changed
+
+- README expanded from a two-line stub into full project documentation: requirements, build
+  instructions, a feature overview, a keyboard shortcut reference, sandboxing and privacy notes,
+  project layout, and where the release process lives.
+
+This release changes documentation only. The application itself is unchanged from 0.11.0.
+
 ## [0.11.0] - 2026-07-28
 
 See [release_notes/0.11.0.md](release_notes/0.11.0.md) for details.
@@ -185,7 +197,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://github.com/peterlharding/imager/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/peterlharding/imager/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/peterlharding/imager/releases/tag/v0.12.0
 [0.11.0]: https://github.com/peterlharding/imager/releases/tag/v0.11.0
 [0.10.0]: https://github.com/peterlharding/imager/releases/tag/v0.10.0
 [0.9.2]: https://github.com/peterlharding/imager/releases/tag/v0.9.2
