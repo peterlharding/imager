@@ -9,6 +9,25 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-07-28
+
+See [release_notes/0.11.0.md](release_notes/0.11.0.md) for details.
+
+### Added
+
+- Unsaved-edit protection: a confirmation alert before edits are discarded, shown when opening
+  another image or folder, closing the image, switching images in a folder, or quitting the app.
+
+### Changed
+
+- Save As and Export now tell a completed save apart from a cancelled one. A successful save
+  clears the unsaved-edits state; Revert to Original stays available either way.
+- The Info pane's File ▸ State reads "Edited (copy saved)" once edits have been written out,
+  and "Edited (unsaved)" before that.
+- Sandbox entitlements: user-selected file access is now read-write, which saving a copy requires.
+  Unused capabilities have been switched off - Downloads and Pictures folder access, camera,
+  Bluetooth, location, printing, and USB.
+
 ## [0.10.0] - 2026-07-27
 
 See [release_notes/0.10.0.md](release_notes/0.10.0.md) for details.
@@ -166,7 +185,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://github.com/peterlharding/imager/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/peterlharding/imager/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/peterlharding/imager/releases/tag/v0.11.0
 [0.10.0]: https://github.com/peterlharding/imager/releases/tag/v0.10.0
 [0.9.2]: https://github.com/peterlharding/imager/releases/tag/v0.9.2
 [0.9.1]: https://github.com/peterlharding/imager/releases/tag/v0.9.1
