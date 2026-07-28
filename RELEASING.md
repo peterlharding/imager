@@ -42,11 +42,15 @@ The `CURRENT_PROJECT_VERSION` build setting is the build number and can be bumpe
 4. **Write the release notes** at `release_notes/<version>.md`.
    Use the existing files as a template: a short intro, Highlights, any Fixed section, and Under the hood.
 
-5. **Build clean** and confirm there are no warnings:
+5. **Build clean and run the tests.** Confirm there are no warnings and no failures:
 
    ```sh
    xcodebuild -project Imager.xcodeproj -scheme Imager -configuration Debug -destination 'platform=macOS' build
+   xcodebuild test -project Imager.xcodeproj -scheme Imager -destination 'platform=macOS'
    ```
+
+   Do not cut a release on a failing or flaky suite.
+   Fix the test or the code first, even when the failure looks unrelated to what the release contains.
 
 6. **Commit** the version bump, changelog, and release notes together:
 
