@@ -23,6 +23,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if !flag { AppDelegate.sharedModel?.ensureWindow() }
         return true
     }
+
+    // Don't let quitting silently throw away edits that were never saved. The alert is
+    // presented by the window, so answer later once the user has chosen.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let model = AppDelegate.sharedModel, model.hasUnsavedEdits else { return .terminateNow }
+        return model.requestQuitConfirmation() ? .terminateLater : .terminateCancel
+    }
 }
 
 @main
@@ -120,8 +127,10 @@ private struct AppCommands: Commands {
                 let type = UTType(filenameExtension: url.pathExtension) ?? .png
                 let ext = url.pathExtension.isEmpty ? (type.preferredFilenameExtension ?? "png") : url.pathExtension
                 let name = "\(url.deletingPathExtension().lastPathComponent).\(ext)"
-                if let error = ImageExporter.run(image: image, defaultName: name, contentType: type) {
-                    model.errorMessage = error
+                switch ImageExporter.run(image: image, defaultName: name, contentType: type) {
+                case .saved: model.markEditsSaved()
+                case .cancelled: break
+                case .failed(let error): model.errorMessage = error
                 }
             }
             .keyboardShortcut("s", modifiers: [.command, .shift])
@@ -132,12 +141,14 @@ private struct AppCommands: Commands {
                     Button(format.displayName) {
                         guard let image = model.image else { return }
                         let base = model.url?.deletingPathExtension().lastPathComponent ?? "Image"
-                        if let error = ImageExporter.run(
+                        switch ImageExporter.run(
                             image: image,
                             defaultName: "\(base).\(format.fileExtension)",
                             contentType: format.contentType
                         ) {
-                            model.errorMessage = error
+                        case .saved: model.markEditsSaved()
+                        case .cancelled: break
+                        case .failed(let error): model.errorMessage = error
                         }
                     }
                 }

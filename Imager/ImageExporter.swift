@@ -39,12 +39,19 @@ enum ImageFormat: CaseIterable, Identifiable {
     }
 }
 
+/// The outcome of presenting the save panel, distinguishing a completed write from
+/// a user cancel so callers can tell whether edits have actually been persisted.
+enum ExportResult {
+    case saved
+    case cancelled
+    case failed(String)
+}
+
 /// Saves an image to a user-chosen file via a save panel (which grants sandboxed write access).
 enum ImageExporter {
 
     /// Presents a save panel restricted to `contentType` and writes the image.
-    /// Returns an error message on failure, or nil on success or user cancel.
-    static func run(image: NSImage, defaultName: String, contentType: UTType) -> String? {
+    static func run(image: NSImage, defaultName: String, contentType: UTType) -> ExportResult {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [contentType]
         panel.canCreateDirectories = true
@@ -52,8 +59,9 @@ enum ImageExporter {
         panel.message = "Save a copy of the image"
         panel.prompt = "Save"
 
-        guard panel.runModal() == .OK, let url = panel.url else { return nil }
-        return write(image, to: url, as: contentType)
+        guard panel.runModal() == .OK, let url = panel.url else { return .cancelled }
+        if let error = write(image, to: url, as: contentType) { return .failed(error) }
+        return .saved
     }
 
     private static func write(_ image: NSImage, to url: URL, as type: UTType) -> String? {

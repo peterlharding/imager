@@ -166,18 +166,18 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://example.com/imager/compare/v0.10.0...HEAD
-[0.10.0]: https://example.com/imager/releases/tag/v0.10.0
-[0.9.2]: https://example.com/imager/releases/tag/v0.9.2
-[0.9.1]: https://example.com/imager/releases/tag/v0.9.1
-[0.9.0]: https://example.com/imager/releases/tag/v0.9.0
-[0.8.0]: https://example.com/imager/releases/tag/v0.8.0
-[0.7.0]: https://example.com/imager/releases/tag/v0.7.0
-[0.6.1]: https://example.com/imager/releases/tag/v0.6.1
-[0.6.0]: https://example.com/imager/releases/tag/v0.6.0
-[0.5.1]: https://example.com/imager/releases/tag/v0.5.1
-[0.5.0]: https://example.com/imager/releases/tag/v0.5.0
-[0.4.0]: https://example.com/imager/releases/tag/v0.4.0
-[0.3.0]: https://example.com/imager/releases/tag/v0.3.0
-[0.2.0]: https://example.com/imager/releases/tag/v0.2.0
-[0.1.0]: https://example.com/imager/releases/tag/v0.1.0
+[Unreleased]: https://github.com/peterlharding/imager/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/peterlharding/imager/releases/tag/v0.10.0
+[0.9.2]: https://github.com/peterlharding/imager/releases/tag/v0.9.2
+[0.9.1]: https://github.com/peterlharding/imager/releases/tag/v0.9.1
+[0.9.0]: https://github.com/peterlharding/imager/releases/tag/v0.9.0
+[0.8.0]: https://github.com/peterlharding/imager/releases/tag/v0.8.0
+[0.7.0]: https://github.com/peterlharding/imager/releases/tag/v0.7.0
+[0.6.1]: https://github.com/peterlharding/imager/releases/tag/v0.6.1
+[0.6.0]: https://github.com/peterlharding/imager/releases/tag/v0.6.0
+[0.5.1]: https://github.com/peterlharding/imager/releases/tag/v0.5.1
+[0.5.0]: https://github.com/peterlharding/imager/releases/tag/v0.5.0
+[0.4.0]: https://github.com/peterlharding/imager/releases/tag/v0.4.0
+[0.3.0]: https://github.com/peterlharding/imager/releases/tag/v0.3.0
+[0.2.0]: https://github.com/peterlharding/imager/releases/tag/v0.2.0
+[0.1.0]: https://github.com/peterlharding/imager/releases/tag/v0.1.0

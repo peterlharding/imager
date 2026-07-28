@@ -136,7 +136,7 @@ enum ImageInfoExtractor {
 
     /// Builds info from an in-memory image (e.g. after cropping), reflecting the pixels actually
     /// shown rather than the source file's metadata. EXIF/GPS are omitted as they no longer apply.
-    static func info(forEditedImage image: NSImage, source url: URL?) -> ImageInfo {
+    static func info(forEditedImage image: NSImage, source url: URL?, hasUnsavedEdits: Bool) -> ImageInfo {
         var sections: [InfoSection] = []
 
         var file: [InfoItem] = []
@@ -144,7 +144,7 @@ enum ImageInfoExtractor {
             file.append(InfoItem(label: "Name", value: url.lastPathComponent))
             file.append(InfoItem(label: "Where", value: displayPath(of: url)))
         }
-        file.append(InfoItem(label: "State", value: "Edited (unsaved)"))
+        file.append(InfoItem(label: "State", value: hasUnsavedEdits ? "Edited (unsaved)" : "Edited (copy saved)"))
         sections.append(InfoSection(title: "File", items: file))
 
         if let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {

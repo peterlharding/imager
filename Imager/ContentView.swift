@@ -135,6 +135,18 @@ struct ContentView: View {
         } message: {
             Text(model.errorMessage ?? "")
         }
+        .alert(
+            "Discard your changes to “\(model.pendingDiscard?.fileName ?? "")”?",
+            isPresented: Binding(
+                get: { model.pendingDiscard != nil },
+                set: { if !$0 { model.resolveDiscard(confirmed: false) } }
+            )
+        ) {
+            Button("Discard Changes", role: .destructive) { model.resolveDiscard(confirmed: true) }
+            Button("Cancel", role: .cancel) { model.resolveDiscard(confirmed: false) }
+        } message: {
+            Text("Your edits haven't been saved. Save a copy with File ▸ Save As… to keep them.")
+        }
     }
 
     // MARK: - Panes

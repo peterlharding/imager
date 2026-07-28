@@ -16,6 +16,22 @@ final class ImageModel {
     /// True when the working image differs from the original (an edit can be undone).
     var canRevert: Bool { image != nil && image !== originalImage }
 
+    /// True when edits have been made but not yet written out with Save As/Export.
+    /// Distinct from `canRevert`: exporting clears this, but the image still differs
+    /// from the original, so reverting stays available.
+    private(set) var hasUnsavedEdits = false
+
+    /// An action waiting on the user's answer to the "discard changes?" alert.
+    /// Non-nil while the alert is showing.
+    var pendingDiscard: PendingDiscard?
+
+    /// A destructive action held back until the user confirms losing unsaved edits.
+    struct PendingDiscard {
+        let fileName: String
+        let onDiscard: () -> Void
+        let onCancel: () -> Void
+    }
+
     // Folder browsing
     private(set) var folderURL: URL?
     private(set) var folderImages: [URL] = []
@@ -46,26 +62,39 @@ final class ImageModel {
     /// Opens a URL, browsing it if it's a folder or showing it if it's an image file.
     /// Used by Finder "Open With", `open -a`, and drag-and-drop.
     func open(_ url: URL) {
+        confirmDiscardingEdits { [self] in performOpen(url) }
+    }
+
+    private func performOpen(_ url: URL) {
         let isDirectory = (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
         if isDirectory {
-            openFolder(url)
+            performOpenFolder(url)
         } else {
-            load(from: url)
+            performLoad(from: url)
         }
     }
 
     /// Clears the current image, returning to the empty state (the window stays open).
     func close() {
+        confirmDiscardingEdits { [self] in performClose() }
+    }
+
+    private func performClose() {
         image = nil
         originalImage = nil
         url = nil
         info = nil
         errorMessage = nil
+        hasUnsavedEdits = false
         clearFolder()
     }
 
     /// Opens a single image file, showing just that image (clears any folder browsing).
     func load(from url: URL) {
+        confirmDiscardingEdits { [self] in performLoad(from: url) }
+    }
+
+    private func performLoad(from url: URL) {
         ensureWindow()
         clearFolder()
         display(url, record: true)
@@ -82,6 +111,10 @@ final class ImageModel {
 
     /// Opens a folder, populating the thumbnail list and showing its first image.
     func openFolder(_ folder: URL) {
+        confirmDiscardingEdits { [self] in performOpenFolder(folder) }
+    }
+
+    private func performOpenFolder(_ folder: URL) {
         ensureWindow()
         clearFolder()
 
@@ -97,12 +130,17 @@ final class ImageModel {
         folderAccess = scoped ? folder : nil
         folderURL = folder
         folderImages = images
-        select(0)
+        performSelect(0)
     }
 
     // MARK: - Navigation
 
     func select(_ index: Int) {
+        guard index != selectionIndex else { return }
+        confirmDiscardingEdits { [self] in performSelect(index) }
+    }
+
+    private func performSelect(_ index: Int) {
         guard folderImages.indices.contains(index) else { return }
         selectionIndex = index
         display(folderImages[index], record: false)
@@ -136,8 +174,53 @@ final class ImageModel {
         self.originalImage = image
         self.url = url
         self.errorMessage = nil
+        self.hasUnsavedEdits = false
         updateInfo()
         if record { recents.record(url) }
+    }
+
+    /// Runs `action` immediately when there is nothing to lose, otherwise parks it in
+    /// `pendingDiscard` for the confirmation alert to resolve.
+    ///
+    /// The prompt is deliberately driven from model state rather than `NSAlert.runModal()`:
+    /// a nested modal started from inside a menu action is torn down when the menu's
+    /// tracking loop unwinds, which dismissed the alert on its own and let the edits go.
+    private func confirmDiscardingEdits(then action: @escaping () -> Void) {
+        guard hasUnsavedEdits else { return action() }
+        pendingDiscard = PendingDiscard(
+            fileName: url?.lastPathComponent ?? "this image",
+            onDiscard: action,
+            onCancel: {}
+        )
+    }
+
+    /// Asks about unsaved edits on quit, answering `NSApp` once the user decides.
+    /// Returns false if a confirmation is already on screen, in which case the quit
+    /// is refused outright rather than stacking a second prompt.
+    func requestQuitConfirmation() -> Bool {
+        guard pendingDiscard == nil else { return false }
+        ensureWindow()
+        pendingDiscard = PendingDiscard(
+            fileName: url?.lastPathComponent ?? "this image",
+            onDiscard: { NSApp.reply(toApplicationShouldTerminate: true) },
+            onCancel: { NSApp.reply(toApplicationShouldTerminate: false) }
+        )
+        return true
+    }
+
+    /// Resolves the pending confirmation. Called by the alert's buttons.
+    func resolveDiscard(confirmed: Bool) {
+        guard let pending = pendingDiscard else { return }
+        pendingDiscard = nil
+        confirmed ? pending.onDiscard() : pending.onCancel()
+    }
+
+    /// Records that the current image has been written out, so it no longer counts
+    /// as unsaved. The edits themselves remain revertable.
+    func markEditsSaved() {
+        guard hasUnsavedEdits else { return }
+        hasUnsavedEdits = false
+        updateInfo()
     }
 
     /// Refreshes `info` to reflect the currently displayed image: the source file's full
@@ -147,7 +230,7 @@ final class ImageModel {
         if !canRevert, let url {
             info = ImageInfoExtractor.info(for: url)
         } else {
-            info = ImageInfoExtractor.info(forEditedImage: image, source: url)
+            info = ImageInfoExtractor.info(forEditedImage: image, source: url, hasUnsavedEdits: hasUnsavedEdits)
         }
     }
 
@@ -161,6 +244,7 @@ final class ImageModel {
         let rect = pixelRect.integral.intersection(full)
         guard rect.width >= 1, rect.height >= 1, let cropped = cg.cropping(to: rect) else { return }
         image = NSImage(cgImage: cropped, size: NSSize(width: cropped.width, height: cropped.height))
+        hasUnsavedEdits = true
         updateInfo()
     }
 
@@ -168,6 +252,7 @@ final class ImageModel {
     func rotate(byDegreesClockwise degrees: Double) {
         guard let current = image, let rotated = ImageTransform.rotated(current, degreesClockwise: degrees) else { return }
         image = rotated
+        hasUnsavedEdits = true
         updateInfo()
     }
 
@@ -175,6 +260,7 @@ final class ImageModel {
     func flip(horizontal: Bool) {
         guard let current = image, let flipped = ImageTransform.flipped(current, horizontal: horizontal) else { return }
         image = flipped
+        hasUnsavedEdits = true
         updateInfo()
     }
 
@@ -182,6 +268,7 @@ final class ImageModel {
     func revert() {
         if let originalImage {
             image = originalImage
+            hasUnsavedEdits = false
             updateInfo()
         }
     }
