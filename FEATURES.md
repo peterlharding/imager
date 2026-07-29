@@ -19,7 +19,7 @@ Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](
   The `ImageEdit` history added in v0.14.0 is already this, minus persistence: making it
   `Codable` gives saved recipes, and applying one to a folder is then a loop.
   New adjustments should be added as `ImageEdit` cases so they join undo and recipes for free.
----
+
 ## Files and browsing
 
 - Move to Trash while browsing a folder, for culling a set quickly.
