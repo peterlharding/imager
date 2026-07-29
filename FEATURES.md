@@ -2,6 +2,41 @@ Feature tracker for Imager.
 Items move from ToDo to Done when they ship, tagged with the release that carried them.
 Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](release_notes/).
 
+Plan below says *when*; ToDo says *what and why*.
+
+# Plan
+
+The next few releases, in order. Provisional: nothing is fixed until it is built, and anything
+here can be resequenced.
+
+Numbering follows [RELEASING.md](RELEASING.md), where a new feature is a MINOR bump and PATCH is
+for backward-compatible fixes only. That is why these are minor releases rather than 0.18.x: they
+all carry features.
+
+## v0.19.0 — folder housekeeping
+
+- Move to Trash while browsing a folder.
+- Name the fallback format in the Save As menu item. *(The only actual fix in the plan.)*
+
+Small and self-contained. Clears the two rough edges left behind before starting anything large.
+
+## v0.20.0 — edit recipes
+
+Save the sequence of changes made to an image, edit it, and re-apply it.
+Half-built already: `ImageEdit` is the recorded workflow, so this is persistence plus a UI.
+
+## v0.21.0 — batch processing
+
+Apply a recipe, or a format conversion, across a whole folder.
+**Depends on v0.20.0** — a batch is a recipe applied many times, so recipes have to exist first.
+
+## v0.22.0 — RAW development
+
+`CIRAWFilter`, rendering from sensor data rather than the demosaiced image.
+Independent of the three above, and the largest of them.
+Also the prerequisite for white balance being worth having, and the only real answer to 8-bit
+banding.
+
 # ToDo
 
 ## Editing
@@ -23,9 +58,17 @@ Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](
 ## Files and browsing
 
 - Move to Trash while browsing a folder, for culling a set quickly.
-- Batch convert or export a whole folder.
+  `FileManager.trashItem` works under the sandbox while folder access is held, so this belongs
+  with folder browsing rather than single-file opens.
+  Wants a confirmation, or an undo, since it moves the user's file.
+- Batch processing: apply an edit recipe, or a format conversion, to every image in a folder,
+  writing the results somewhere else rather than over the originals.
+  Needs recipes first, since a batch is a recipe applied many times.
+  The work beyond that is a destination folder, a naming rule, progress, and cancellation.
 - Name the fallback format in the Save As menu item when the source cannot be written,
   e.g. "Save As PNG…" for a RAW file.
+  The fallback itself shipped in v0.15.0; only the menu wording is missing, so the command
+  silently changes format.
 - Recursive folder browsing, including subfolders.
 
 ## Viewing
