@@ -93,7 +93,7 @@ None currently open.
 - "Open in Imager" Finder service for folders and images, since Finder offers no Open With
   submenu for folders — v0.16.0
 - File ▸ Edit With: hand the current file to any other application, with declared editors listed
-  first and everything else under "All Applications" — unreleased
+  first and everything else under "All Applications" — v0.17.0
 
 ## Viewing
 
