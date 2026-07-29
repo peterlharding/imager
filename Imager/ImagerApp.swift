@@ -138,8 +138,13 @@ private struct AppCommands: Commands {
         CommandGroup(replacing: .saveItem) {
             Button("Save As…") {
                 guard let image = model.image, let url = model.url else { return }
-                let type = UTType(filenameExtension: url.pathExtension) ?? .png
-                let ext = url.pathExtension.isEmpty ? (type.preferredFilenameExtension ?? "png") : url.pathExtension
+                let sourceType = UTType(filenameExtension: url.pathExtension)
+                // RAW and other read-only formats fall back to PNG; without this the
+                // save panel offers a format ImageIO cannot write and always fails.
+                let type = ImageExporter.saveAsType(for: sourceType)
+                let ext = (type == sourceType && !url.pathExtension.isEmpty)
+                    ? url.pathExtension                       // keep .jpg rather than normalising to .jpeg
+                    : (type.preferredFilenameExtension ?? "png")
                 let name = "\(url.deletingPathExtension().lastPathComponent).\(ext)"
                 switch ImageExporter.run(image: image, defaultName: name, contentType: type) {
                 case .saved: model.markEditsSaved()

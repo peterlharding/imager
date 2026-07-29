@@ -17,6 +17,12 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
   settles it.
 - `FEATURES.md`, tracking planned and shipped features with the release each one landed in.
 
+### Fixed
+
+- Save As no longer fails on formats macOS can read but not write. Camera RAW (NEF, CR2, ARW,
+  DNG and the rest) could be opened but never saved: Save As derived the output format from the
+  source file and asked ImageIO to write RAW, which is impossible. It now falls back to PNG.
+
 ## [0.14.0] - 2026-07-29
 
 See [release_notes/0.14.0.md](release_notes/0.14.0.md) for details.

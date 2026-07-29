@@ -108,6 +108,24 @@ If an image has edits that have not been written out, Imager asks before letting
 you are opening something else, closing the image, moving to the next image in a folder, or
 quitting the app.
 
+### File formats
+
+Imager does not carry a format list of its own.
+It opens whatever macOS can decode through ImageIO, which on a current system is around 60
+formats: PNG, JPEG, TIFF, HEIC, GIF, BMP, WebP, PSD, and camera RAW from Nikon (NEF, NRW),
+Canon (CR2, CR3), Sony (ARW), Adobe (DNG), Fujifilm, Olympus, Panasonic, Pentax, Leica,
+Hasselblad and others.
+RAW files open, browse, and show their EXIF metadata like any other image.
+
+Writing is a much shorter list, because ImageIO can encode far fewer formats than it can decode.
+Export As offers **PNG, JPEG, GIF, TIFF and HEIC**.
+
+**No camera RAW format can be written**, by Imager or anything else: RAW records what a sensor
+captured, and nothing re-encodes to it.
+Saving a copy of a RAW file therefore produces a PNG, and Save As switches to PNG automatically
+when the source format cannot be written.
+Use Export As if you want a different format.
+
 ### Finder integration
 
 Imager registers as a viewer for images and folders, so it appears in Finder's "Open With" menu,

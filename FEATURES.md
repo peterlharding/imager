@@ -15,6 +15,8 @@ Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](
 
 - Move to Trash while browsing a folder, for culling a set quickly.
 - Batch convert or export a whole folder.
+- Name the fallback format in the Save As menu item when the source cannot be written,
+  e.g. "Save As PNG…" for a RAW file.
 - Recursive folder browsing, including subfolders.
 
 ## Viewing
@@ -54,6 +56,8 @@ Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](
 - Close Image (⌘W), leaving the window open — v0.9.2
 - Folder sort order by name, date modified or file size, reversible and remembered — v0.14.0
 - Copy Image (⌘C) and Paste Image (⌘V), with a pasted image treated as unsaved — unreleased
+- Save As falls back to PNG for formats macOS can read but not write, such as camera RAW —
+  unreleased
 
 ## Viewing
 

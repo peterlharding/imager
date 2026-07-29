@@ -50,6 +50,26 @@ enum ExportResult {
 /// Saves an image to a user-chosen file via a save panel (which grants sandboxed write access).
 enum ImageExporter {
 
+    /// Content types ImageIO can encode, which is far fewer than it can decode.
+    /// Every camera RAW format is readable but not writable.
+    static let writableTypes: Set<String> = Set(
+        (CGImageDestinationCopyTypeIdentifiers() as? [String]) ?? []
+    )
+
+    static func canWrite(_ type: UTType) -> Bool {
+        writableTypes.contains(type.identifier)
+    }
+
+    /// The format to save a copy in, given the source file's own format.
+    ///
+    /// Keeps the source format when it can be written, and falls back to PNG when it
+    /// cannot. Without the fallback, Save As on a RAW file offers to write a format
+    /// nothing can encode and fails every time.
+    static func saveAsType(for sourceType: UTType?) -> UTType {
+        guard let sourceType, canWrite(sourceType) else { return .png }
+        return sourceType
+    }
+
     /// Presents a save panel restricted to `contentType` and writes the image.
     static func run(image: NSImage, defaultName: String, contentType: UTType) -> ExportResult {
         let panel = NSSavePanel()
