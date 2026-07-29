@@ -80,7 +80,7 @@ None currently open.
 - Unsaved-edit protection: confirmation before edits are discarded, including on quit — v0.11.0
 - Multi-step undo and redo (⌘Z / ⇧⌘Z), with the menu naming each step — v0.14.0
 - Image adjustments in an Adjust inspector pane: exposure, highlights, shadows, contrast,
-  saturation, vibrance and hue, with Reset — unreleased
+  saturation, vibrance and hue, with Reset — v0.18.0
 
   Built as planned. One `ImageEdit.adjust` holds all seven values, so a drag is one undo step,
   and only the last adjustment applies during replay, keeping any history to one filter pass.

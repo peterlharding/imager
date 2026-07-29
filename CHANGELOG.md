@@ -9,6 +9,10 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-07-29
+
+See [release_notes/0.18.0.md](release_notes/0.18.0.md) for details.
+
 ### Added
 
 - Image adjustments: exposure, highlights, shadows, contrast, saturation, vibrance and hue, in
@@ -302,7 +306,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://github.com/peterlharding/imager/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/peterlharding/imager/compare/v0.18.0...HEAD
+[0.18.0]: https://github.com/peterlharding/imager/releases/tag/v0.18.0
 [0.17.0]: https://github.com/peterlharding/imager/releases/tag/v0.17.0
 [0.16.0]: https://github.com/peterlharding/imager/releases/tag/v0.16.0
 [0.15.0]: https://github.com/peterlharding/imager/releases/tag/v0.15.0
