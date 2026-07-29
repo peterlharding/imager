@@ -57,7 +57,7 @@ None currently open.
 - Save As falls back to PNG for formats macOS can read but not write, such as camera RAW — v0.15.0
 - Camera RAW support, inherited from ImageIO and confirmed on Nikon NEF — v0.15.0
 - "Open in Imager" Finder service for folders and images, since Finder offers no Open With
-  submenu for folders — unreleased
+  submenu for folders — v0.16.0
 
 ## Viewing
 
