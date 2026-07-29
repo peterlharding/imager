@@ -3,11 +3,16 @@ import UniformTypeIdentifiers
 
 struct ContentView: View {
     @Environment(ImageModel.self) private var model
+    @Environment(Slideshow.self) private var slideshow
     @Environment(\.openWindow) private var openWindow
     @State private var showInfo = false
     @State private var showSidebar = false
     @State private var showRotate = false
     @State private var zoom = ZoomController()
+
+    /// Sidebar and inspector visibility from before a slideshow hid them, so
+    /// stopping puts the window back the way the user had it.
+    @State private var chromeBeforeSlideshow: (sidebar: Bool, info: Bool)?
 
     var body: some View {
         Group {
@@ -31,7 +36,22 @@ struct ContentView: View {
         .focusedSceneValue(\.sidebarVisible, $showSidebar)
         .focusedSceneValue(\.zoomController, zoom)
         .onAppear { model.setWindowOpener { openWindow(id: "main") } }
-        .onChange(of: model.folderURL) { showSidebar = model.canBrowse }
+        .onChange(of: model.folderURL) {
+            slideshow.stop()
+            showSidebar = model.canBrowse
+        }
+        // Editing during a show stops it, so the timer can never walk away from
+        // unsaved work or raise the discard confirmation mid-slideshow.
+        .onChange(of: model.hasUnsavedEdits) { _, unsaved in
+            if unsaved { slideshow.stop() }
+        }
+        .onChange(of: slideshow.isRunning) { _, running in
+            running ? enterSlideshowMode() : leaveSlideshowMode()
+        }
+        // Leaving full screen (Escape, or the green button) also ends the show.
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didExitFullScreenNotification)) { _ in
+            slideshow.stop()
+        }
         .toolbar {
             if model.canBrowse {
                 ToolbarItem(placement: .navigation) {
@@ -112,6 +132,17 @@ struct ContentView: View {
                     .help("Enter full screen")
                 }
             }
+            if slideshow.canStart {
+                ToolbarItem(placement: .primaryAction) {
+                    Button { slideshow.toggle() } label: {
+                        Label(
+                            slideshow.isRunning ? "Stop Slideshow" : "Slideshow",
+                            systemImage: slideshow.isRunning ? "stop.fill" : "play.fill"
+                        )
+                    }
+                    .help(slideshow.isRunning ? "Stop the slideshow (⇧⌘F)" : "Start a slideshow (⇧⌘F)")
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     showInfo.toggle()
@@ -175,6 +206,28 @@ struct ContentView: View {
     /// Binding for the Pan/Select tool picker.
     private var toolBinding: Binding<ImageTool> {
         Binding(get: { zoom.tool }, set: { zoom.tool = $0 })
+    }
+
+    // MARK: - Slideshow presentation
+
+    /// Clears the window down to just the image and goes full screen.
+    private func enterSlideshowMode() {
+        chromeBeforeSlideshow = (sidebar: showSidebar, info: showInfo)
+        showSidebar = false
+        showInfo = false
+        guard let window = NSApp.keyWindow, !window.styleMask.contains(.fullScreen) else { return }
+        window.toggleFullScreen(nil)
+    }
+
+    /// Restores the chrome the user had, and leaves full screen if we entered it.
+    private func leaveSlideshowMode() {
+        if let chrome = chromeBeforeSlideshow {
+            showSidebar = chrome.sidebar
+            showInfo = chrome.info
+            chromeBeforeSlideshow = nil
+        }
+        guard let window = NSApp.keyWindow, window.styleMask.contains(.fullScreen) else { return }
+        window.toggleFullScreen(nil)
     }
 
     /// Crops the current image to the active selection, then clears it.
@@ -267,6 +320,8 @@ private struct EmptyState: View {
 }
 
 #Preview {
+    let model = ImageModel()
     ContentView()
-        .environment(ImageModel())
+        .environment(model)
+        .environment(Slideshow(model: model))
 }

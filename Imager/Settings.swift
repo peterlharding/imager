@@ -93,6 +93,8 @@ struct SettingsView: View {
 /// General settings.
 struct GeneralSettings: View {
     @Bindable var recents: RecentFilesStore
+    @AppStorage(SlideshowSetting.intervalKey) private var interval = SlideshowSetting.defaultInterval
+    @AppStorage(SlideshowSetting.loopKey) private var loops = SlideshowSetting.defaultLoop
 
     var body: some View {
         Form {
@@ -100,6 +102,19 @@ struct GeneralSettings: View {
                 Stepper(value: $recents.maxCount, in: RecentFilesStore.minCount...RecentFilesStore.maxCountLimit) {
                     Text("\(recents.maxCount)").monospacedDigit()
                 }
+            }
+
+            Section("Slideshow") {
+                LabeledContent("Seconds between images") {
+                    Stepper(
+                        value: $interval,
+                        in: SlideshowSetting.minInterval...SlideshowSetting.maxInterval,
+                        step: 1
+                    ) {
+                        Text("\(Int(interval))").monospacedDigit()
+                    }
+                }
+                Toggle("Repeat after the last image", isOn: $loops)
             }
         }
         .formStyle(.grouped)

@@ -11,6 +11,12 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ### Added
 
+- Slideshow: run the folder being browsed as a full-screen slideshow from View ▸ Start Slideshow
+  (⇧⌘F) or the toolbar. The sidebar and inspector hide while it runs and are restored afterwards,
+  the display is kept awake, and leaving full screen ends it. Editing the current image stops the
+  show rather than advancing away from unsaved work. Settings ▸ General sets the interval (1-60
+  seconds) and whether it repeats after the last image.
+
 - Unit test harness: an `ImagerTests` target built on Swift Testing, with a shared Xcode scheme so
   `xcodebuild test` works from a fresh clone. Initial suites cover the pixel transforms, the
   unsaved-edit state machine, the recent-files limit, and the export format table.

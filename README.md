@@ -58,6 +58,11 @@ recent files or settings.
   The toolbar shows the current magnification and snaps back to fit when clicked, and you can zoom
   to fit or jump to actual size from the View menu.
 - View it full screen from the toolbar or **View ▸ Enter Full Screen**.
+- Run a folder as a slideshow with **View ▸ Start Slideshow** (**⇧⌘F**) or the toolbar's play
+  button.
+  It goes full screen, hides the sidebar and inspector, and holds off display sleep while running.
+  Escape, or leaving full screen, ends it and puts the window back as it was.
+  Editing the image on screen stops the show rather than advancing away from unsaved work.
 - Recent files are remembered across launches using security-scoped bookmarks, so reopening a file
   works without re-granting access.
 
@@ -98,7 +103,8 @@ It registers as an alternate opener, so it will not take over as the default han
 
 ### Settings
 
-**Settings ▸ General** sets how many recent files to remember, from 1 to 50.
+**Settings ▸ General** sets how many recent files to remember, from 1 to 50, and the slideshow's
+interval in seconds and whether it repeats after the last image.
 
 **Settings ▸ Appearance** sets the background behind the image, either a solid colour with preset
 swatches and RGB sliders, or a checkerboard, with an opacity slider and a live preview.
@@ -116,6 +122,7 @@ swatches and RGB sliders, or a checkerboard, with an opacity slider and a live p
 | ⌘I | Show / Hide Image Info |
 | ⌥⌘S | Show / Hide Thumbnails |
 | ← / → | Previous / Next Image |
+| ⇧⌘F | Start / Stop Slideshow |
 | ⌘= / ⌘- | Zoom In / Zoom Out |
 | ⌘0 | Zoom to Fit |
 | ⌘1 | Actual Size |

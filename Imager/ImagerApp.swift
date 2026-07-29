@@ -36,11 +36,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 struct ImagerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var model: ImageModel
+    @State private var slideshow: Slideshow
 
     init() {
         // The model and the Open Recent menu share one store.
         let model = ImageModel(recents: RecentFilesStore())
         _model = State(initialValue: model)
+        _slideshow = State(initialValue: Slideshow(model: model))
         AppDelegate.sharedModel = model
     }
 
@@ -48,9 +50,10 @@ struct ImagerApp: App {
         Window("Imager", id: "main") {
             ContentView()
                 .environment(model)
+                .environment(slideshow)
         }
         .commands {
-            AppCommands(model: model)
+            AppCommands(model: model, slideshow: slideshow)
         }
 
         Window("About \(AboutView.appName)", id: "about") {
@@ -71,6 +74,7 @@ struct ImagerApp: App {
 /// even after the window has been closed.
 private struct AppCommands: Commands {
     let model: ImageModel
+    let slideshow: Slideshow
     @Environment(\.openWindow) private var openWindow
     @FocusedValue(\.inspectorVisible) private var inspectorVisible
     @FocusedValue(\.sidebarVisible) private var sidebarVisible
@@ -191,6 +195,10 @@ private struct AppCommands: Commands {
             Button("Next Image") { model.showNext() }
                 .keyboardShortcut(.rightArrow, modifiers: [])
                 .disabled(!model.canBrowse)
+
+            Button(slideshow.isRunning ? "Stop Slideshow" : "Start Slideshow") { slideshow.toggle() }
+                .keyboardShortcut("f", modifiers: [.command, .shift])
+                .disabled(!slideshow.canStart)
 
             Divider()
 
