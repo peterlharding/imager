@@ -9,6 +9,21 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+### Added
+
+- Multi-step undo and redo (⌘Z / ⇧⌘Z) across crop, rotate, and flip. The menu items name the
+  step, e.g. "Undo Rotate". Revert to Original still discards the whole history at once.
+- Folder sort order: View ▸ Sort Images By offers name, date modified, or file size, with an
+  option to reverse. Name order is natural, so `photo2` sorts before `photo10`. Re-sorting keeps
+  the image on screen selected, and the choice is remembered between launches.
+
+### Changed
+
+- Edits are now recorded as a replayable list of operations rather than mutating the displayed
+  image in place, so history costs no extra memory per step.
+- "Unsaved edits" is now derived from the edit history rather than latched, so undoing back to
+  the last saved state clears it and redoing away from that state sets it again.
+
 ## [0.13.1] - 2026-07-29
 
 See [release_notes/0.13.1.md](release_notes/0.13.1.md) for details.

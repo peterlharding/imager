@@ -54,6 +54,10 @@ recent files or settings.
 - Open a single image with **File ▸ Open…**, the toolbar button, or drag-and-drop.
 - Open a folder with **File ▸ Open Folder…** to browse it as a set, with a QuickLook thumbnail
   sidebar and arrow-key navigation.
+- Order a folder by name, date modified, or file size from **View ▸ Sort Images By**, optionally
+  reversed.
+  Name order is natural, so `photo2` comes before `photo10`.
+  Re-sorting keeps the image you are looking at on screen, and the choice is remembered.
 - Zoom and pan a large image: scroll to zoom, drag to pan, or pinch on a trackpad.
   The toolbar shows the current magnification and snaps back to fit when clicked, and you can zoom
   to fit or jump to actual size from the View menu.
@@ -80,7 +84,13 @@ metadata, and tells you whether those edits have been saved yet.
   The selection can be moved and resized before you commit it.
 - **Rotate** left, right, or 180°, plus a fine-rotation stepper for small-angle straightening.
 - **Flip** horizontally or vertically.
-- **Revert to Original** undoes every edit and returns to the file as it was loaded.
+- **Undo** and **Redo** (**⌘Z** / **⇧⌘Z**) step back and forth through the edits one at a time.
+  The menu names the step, so you can see whether you are about to undo a crop or a rotation.
+- **Revert to Original** discards the whole history at once and returns to the file as it was
+  loaded.
+
+Edits are recorded as a list of operations replayed from the original image rather than as saved
+copies of it, so a long history costs almost nothing in memory.
 
 All editing is non-destructive.
 Imager never writes to the file you opened.
@@ -126,6 +136,7 @@ swatches and RGB sliders, or a checkerboard, with an opacity slider and a live p
 | ⌘= / ⌘- | Zoom In / Zoom Out |
 | ⌘0 | Zoom to Fit |
 | ⌘1 | Actual Size |
+| ⌘Z / ⇧⌘Z | Undo / Redo |
 | ⌘K | Crop to Selection |
 | ⌘L / ⌘R | Rotate Left / Rotate Right |
 | ⌘, | Settings |

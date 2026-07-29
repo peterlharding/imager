@@ -10,16 +10,34 @@ final class ImageModel {
     var info: ImageInfo?
     var errorMessage: String?
 
-    /// The image as originally loaded, kept so edits (e.g. crop) can be reverted.
+    /// The image as originally loaded, kept so edits can be undone or reverted.
     private(set) var originalImage: NSImage?
 
-    /// True when the working image differs from the original (an edit can be undone).
-    var canRevert: Bool { image != nil && image !== originalImage }
+    /// Edits applied to `originalImage`, oldest first. Replaying these produces `image`.
+    private(set) var edits: [ImageEdit] = []
 
-    /// True when edits have been made but not yet written out with Save As/Export.
-    /// Distinct from `canRevert`: exporting clears this, but the image still differs
-    /// from the original, so reverting stays available.
-    private(set) var hasUnsavedEdits = false
+    /// Edits taken off `edits` by undo, newest first, waiting to be redone.
+    /// Cleared as soon as a fresh edit is made, as usual for an undo history.
+    private(set) var redoStack: [ImageEdit] = []
+
+    /// The edit history as of the last save or load, so "unsaved" survives undo and redo.
+    private var savedEdits: [ImageEdit] = []
+
+    /// True when the working image differs from the original (an edit can be undone).
+    var canRevert: Bool { !edits.isEmpty }
+
+    var canUndo: Bool { !edits.isEmpty }
+    var canRedo: Bool { !redoStack.isEmpty }
+
+    /// Names for the Undo/Redo menu items, e.g. "Undo Rotate".
+    var undoActionName: String? { edits.last?.actionName }
+    var redoActionName: String? { redoStack.last?.actionName }
+
+    /// True when the edit history differs from the last saved state.
+    ///
+    /// Derived rather than stored so that undoing back to the saved state clears it,
+    /// and redoing away from it sets it again.
+    var hasUnsavedEdits: Bool { edits != savedEdits }
 
     /// An action waiting on the user's answer to the "discard changes?" alert.
     /// Non-nil while the alert is showing.
@@ -42,6 +60,24 @@ final class ImageModel {
 
     let recents: RecentFilesStore
 
+    /// How the browsed folder is ordered. Persisted, and re-sorts the folder in place
+    /// while keeping the image on screen selected.
+    var sortOrder: FolderSortOrder {
+        didSet {
+            defaults.set(sortOrder.rawValue, forKey: FolderSortOrder.orderKey)
+            resortFolder()
+        }
+    }
+
+    var sortReversed: Bool {
+        didSet {
+            defaults.set(sortReversed, forKey: FolderSortOrder.reversedKey)
+            resortFolder()
+        }
+    }
+
+    @ObservationIgnored private let defaults: UserDefaults
+
     /// Reopens/fronts the app's window. Installed by the scene so any open path
     /// can display an image even after the window was closed.
     @ObservationIgnored private var windowOpener: (() -> Void)?
@@ -49,8 +85,12 @@ final class ImageModel {
     /// Held security-scoped access to the folder currently being browsed.
     @ObservationIgnored private var folderAccess: URL?
 
-    init(recents: RecentFilesStore = RecentFilesStore()) {
+    init(recents: RecentFilesStore = RecentFilesStore(), defaults: UserDefaults = .standard) {
         self.recents = recents
+        self.defaults = defaults
+        self.sortOrder = FolderSortOrder(rawValue: defaults.string(forKey: FolderSortOrder.orderKey) ?? "")
+            ?? FolderSortOrder.defaultOrder
+        self.sortReversed = defaults.bool(forKey: FolderSortOrder.reversedKey)
     }
 
     func setWindowOpener(_ opener: @escaping () -> Void) { windowOpener = opener }
@@ -85,7 +125,9 @@ final class ImageModel {
         url = nil
         info = nil
         errorMessage = nil
-        hasUnsavedEdits = false
+        edits.removeAll()
+        redoStack.removeAll()
+        savedEdits.removeAll()
         clearFolder()
     }
 
@@ -121,7 +163,7 @@ final class ImageModel {
         // Folder access grants read to the contents; hold it for the session so
         // enumeration and every sibling image load succeed under the sandbox.
         let scoped = folder.startAccessingSecurityScopedResource()
-        let images = Self.imageURLs(in: folder)
+        let images = Self.imageURLs(in: folder, order: sortOrder, reversed: sortReversed)
         guard !images.isEmpty else {
             if scoped { folder.stopAccessingSecurityScopedResource() }
             self.errorMessage = "No images found in “\(folder.lastPathComponent)”."
@@ -174,7 +216,9 @@ final class ImageModel {
         self.originalImage = image
         self.url = url
         self.errorMessage = nil
-        self.hasUnsavedEdits = false
+        self.edits.removeAll()
+        self.redoStack.removeAll()
+        self.savedEdits.removeAll()
         updateInfo()
         if record { recents.record(url) }
     }
@@ -219,7 +263,7 @@ final class ImageModel {
     /// as unsaved. The edits themselves remain revertable.
     func markEditsSaved() {
         guard hasUnsavedEdits else { return }
-        hasUnsavedEdits = false
+        savedEdits = edits
         updateInfo()
     }
 
@@ -237,40 +281,52 @@ final class ImageModel {
     // MARK: - Editing
 
     /// Crops the current image to a rectangle in image pixel coordinates (top-left origin).
-    func crop(to pixelRect: CGRect) {
-        guard let current = image,
-              let cg = current.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
-        let full = CGRect(x: 0, y: 0, width: cg.width, height: cg.height)
-        let rect = pixelRect.integral.intersection(full)
-        guard rect.width >= 1, rect.height >= 1, let cropped = cg.cropping(to: rect) else { return }
-        image = NSImage(cgImage: cropped, size: NSSize(width: cropped.width, height: cropped.height))
-        hasUnsavedEdits = true
-        updateInfo()
-    }
+    func crop(to pixelRect: CGRect) { apply(.crop(pixelRect)) }
 
     /// Rotates the current image by the given angle in degrees (positive = clockwise).
-    func rotate(byDegreesClockwise degrees: Double) {
-        guard let current = image, let rotated = ImageTransform.rotated(current, degreesClockwise: degrees) else { return }
-        image = rotated
-        hasUnsavedEdits = true
-        updateInfo()
-    }
+    func rotate(byDegreesClockwise degrees: Double) { apply(.rotate(degreesClockwise: degrees)) }
 
     /// Mirrors the current image horizontally or vertically.
-    func flip(horizontal: Bool) {
-        guard let current = image, let flipped = ImageTransform.flipped(current, horizontal: horizontal) else { return }
-        image = flipped
-        hasUnsavedEdits = true
+    func flip(horizontal: Bool) { apply(.flip(horizontal: horizontal)) }
+
+    /// Applies an edit and records it, discarding any redo history.
+    /// An edit that cannot be carried out is not recorded.
+    private func apply(_ edit: ImageEdit) {
+        guard let current = image, let result = edit.apply(to: current) else { return }
+        image = result
+        edits.append(edit)
+        redoStack.removeAll()
         updateInfo()
     }
 
-    /// Restores the image as originally loaded, discarding edits.
+    /// Takes back the most recent edit.
+    func undo() {
+        guard let last = edits.popLast() else { return }
+        redoStack.append(last)
+        rebuildImage()
+    }
+
+    /// Re-applies the most recently undone edit.
+    func redo() {
+        guard let next = redoStack.popLast() else { return }
+        edits.append(next)
+        rebuildImage()
+    }
+
+    /// Restores the image as originally loaded, discarding the whole history.
     func revert() {
-        if let originalImage {
-            image = originalImage
-            hasUnsavedEdits = false
-            updateInfo()
-        }
+        guard originalImage != nil else { return }
+        edits.removeAll()
+        redoStack.removeAll()
+        savedEdits.removeAll()
+        rebuildImage()
+    }
+
+    /// Recomputes the displayed image by replaying `edits` onto the original.
+    private func rebuildImage() {
+        guard let originalImage else { return }
+        image = edits.isEmpty ? originalImage : edits.applied(to: originalImage)
+        updateInfo()
     }
 
     private func clearFolder() {
@@ -285,9 +341,17 @@ final class ImageModel {
 
     // MARK: - Enumeration
 
-    /// Immediate (non-recursive) image files in a folder, sorted Finder-style by name.
-    static func imageURLs(in folder: URL) -> [URL] {
-        let keys: [URLResourceKey] = [.contentTypeKey, .isRegularFileKey]
+    /// Immediate (non-recursive) image files in a folder, in the requested order.
+    /// Name order is Finder-style; date and size ties fall back to name so the
+    /// result is stable rather than dependent on directory order.
+    static func imageURLs(
+        in folder: URL,
+        order: FolderSortOrder = .name,
+        reversed: Bool = false
+    ) -> [URL] {
+        let keys: [URLResourceKey] = [
+            .contentTypeKey, .isRegularFileKey, .contentModificationDateKey, .fileSizeKey,
+        ]
         guard let contents = try? FileManager.default.contentsOfDirectory(
             at: folder,
             includingPropertiesForKeys: keys,
@@ -295,9 +359,42 @@ final class ImageModel {
         ) else {
             return []
         }
-        return contents
-            .filter(isImageFile)
-            .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+
+        let sorted = contents.filter(isImageFile).sorted { a, b in
+            switch order {
+            case .name:
+                byName(a, b)
+            case .dateModified:
+                modified(a) == modified(b) ? byName(a, b) : modified(a) < modified(b)
+            case .size:
+                size(a) == size(b) ? byName(a, b) : size(a) < size(b)
+            }
+        }
+        return reversed ? sorted.reversed() : sorted
+    }
+
+    private static func byName(_ a: URL, _ b: URL) -> Bool {
+        a.lastPathComponent.localizedStandardCompare(b.lastPathComponent) == .orderedAscending
+    }
+
+    private static func modified(_ url: URL) -> Date {
+        (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
+    }
+
+    private static func size(_ url: URL) -> Int {
+        (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
+    }
+
+    /// Re-orders the current folder in place, keeping the image on screen selected.
+    /// Deliberately does not go through `select()`: the displayed image is unchanged,
+    /// so there is nothing to reload and nothing to confirm.
+    private func resortFolder() {
+        guard let folderURL, !folderImages.isEmpty else { return }
+        let showing = selectionIndex.flatMap { folderImages.indices.contains($0) ? folderImages[$0] : nil }
+        folderImages = Self.imageURLs(in: folderURL, order: sortOrder, reversed: sortReversed)
+        if let showing, let index = folderImages.firstIndex(of: showing) {
+            selectionIndex = index
+        }
     }
 
     private static func isImageFile(_ url: URL) -> Bool {

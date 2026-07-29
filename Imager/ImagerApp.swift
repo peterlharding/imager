@@ -76,6 +76,16 @@ private struct AppCommands: Commands {
     let model: ImageModel
     let slideshow: Slideshow
     @Environment(\.openWindow) private var openWindow
+
+    /// Menu bindings onto the model. `model` is a plain reference here rather than
+    /// `@Bindable`, so the bindings are made by hand.
+    private var sortOrderBinding: Binding<FolderSortOrder> {
+        Binding(get: { model.sortOrder }, set: { model.sortOrder = $0 })
+    }
+
+    private var sortReversedBinding: Binding<Bool> {
+        Binding(get: { model.sortReversed }, set: { model.sortReversed = $0 })
+    }
     @FocusedValue(\.inspectorVisible) private var inspectorVisible
     @FocusedValue(\.sidebarVisible) private var sidebarVisible
     @FocusedValue(\.zoomController) private var zoom
@@ -173,6 +183,17 @@ private struct AppCommands: Commands {
             .keyboardShortcut("c", modifiers: [.command, .option])
             .disabled(model.url == nil)
         }
+        // The stock Undo/Redo drive the responder chain's undo manager, which knows
+        // nothing about image edits. Point them at the model's own history instead.
+        CommandGroup(replacing: .undoRedo) {
+            Button(model.undoActionName.map { "Undo \($0)" } ?? "Undo") { model.undo() }
+                .keyboardShortcut("z", modifiers: .command)
+                .disabled(!model.canUndo)
+
+            Button(model.redoActionName.map { "Redo \($0)" } ?? "Redo") { model.redo() }
+                .keyboardShortcut("z", modifiers: [.command, .shift])
+                .disabled(!model.canRedo)
+        }
         CommandGroup(after: .sidebar) {
             Button(sidebarVisible?.wrappedValue == true ? "Hide Thumbnails" : "Show Thumbnails") {
                 sidebarVisible?.wrappedValue.toggle()
@@ -199,6 +220,20 @@ private struct AppCommands: Commands {
             Button(slideshow.isRunning ? "Stop Slideshow" : "Start Slideshow") { slideshow.toggle() }
                 .keyboardShortcut("f", modifiers: [.command, .shift])
                 .disabled(!slideshow.canStart)
+
+            Menu("Sort Images By") {
+                Picker("Sort Images By", selection: sortOrderBinding) {
+                    ForEach(FolderSortOrder.allCases) { order in
+                        Text(order.label).tag(order)
+                    }
+                }
+                .pickerStyle(.inline)
+
+                Divider()
+
+                Toggle("Reversed", isOn: sortReversedBinding)
+            }
+            .disabled(!model.canBrowse)
 
             Divider()
 
