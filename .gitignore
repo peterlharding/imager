@@ -13,6 +13,10 @@ xcuserdata/
 *.dSYM.zip
 *.dSYM
 
+## Release artifacts
+build/
+*.xcarchive
+
 ## Playgrounds
 timeline.xctimeline
 playground.xcworkspace
