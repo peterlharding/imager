@@ -24,6 +24,7 @@
 		1A00000000000000000000D3 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		1A00000000000000000000D4 /* release_notes */ = {isa = PBXFileReference; lastKnownFileType = folder; path = release_notes; sourceTree = "<group>"; };
 		1A00000000000000000000D5 /* RELEASING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASING.md; sourceTree = "<group>"; };
+		1A00000000000000000000D6 /* FEATURES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = FEATURES.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -72,6 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				1A00000000000000000000D1 /* CHANGELOG.md */,
+				1A00000000000000000000D6 /* FEATURES.md */,
 				1A00000000000000000000D5 /* RELEASING.md */,
 				1A00000000000000000000D4 /* release_notes */,
 				1A00000000000000000000D2 /* README.md */,
