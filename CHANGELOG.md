@@ -9,6 +9,10 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-07-29
+
+See [release_notes/0.14.0.md](release_notes/0.14.0.md) for details.
+
 ### Added
 
 - Multi-step undo and redo (⌘Z / ⇧⌘Z) across crop, rotate, and flip. The menu items name the
@@ -22,6 +26,9 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 - The image is no longer left oversized and off-centre after a slideshow leaves full screen. A
   fitted image now re-fits whenever the viewport changes size, including any window resize. A
   zoom level you chose yourself is still preserved across a resize.
+- The image is no longer displaced when a slideshow starts from a small window on a large
+  external display. The re-fit is driven by the resize itself rather than by a layout pass,
+  which a window resize does not reliably trigger.
 
 ### Changed
 
@@ -245,7 +252,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://github.com/peterlharding/imager/compare/v0.13.1...HEAD
+[Unreleased]: https://github.com/peterlharding/imager/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/peterlharding/imager/releases/tag/v0.14.0
 [0.13.1]: https://github.com/peterlharding/imager/releases/tag/v0.13.1
 [0.13.0]: https://github.com/peterlharding/imager/releases/tag/v0.13.0
 [0.12.0]: https://github.com/peterlharding/imager/releases/tag/v0.12.0
