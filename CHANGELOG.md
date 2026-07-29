@@ -9,6 +9,19 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+### Added
+
+- File ▸ Move to Trash (⌘⌫) sends the current file to the Trash and moves on to the next image in
+  the folder, for culling a set quickly. It does not ask first: the Trash is itself the undo, and
+  a prompt on every image would defeat the point. Trashing the last image in a folder falls back
+  to the one before it, and trashing the last remaining image returns to the empty state.
+
+### Fixed
+
+- Save As now names the format when it will not be the source's own, e.g. "Save As PNG…" for a
+  camera RAW file. The fallback to PNG shipped in 0.15.0, but the menu item still read "Save As…"
+  and so silently changed format.
+
 ## [0.18.0] - 2026-07-29
 
 See [release_notes/0.18.0.md](release_notes/0.18.0.md) for details.

@@ -85,6 +85,10 @@ final class ImageModel {
     /// Injectable so tests never touch the user's real clipboard.
     @ObservationIgnored private let pasteboard: NSPasteboard
 
+    /// How a file is sent to the Trash. Injectable so tests do not fill the user's
+    /// actual Trash with temporary files.
+    @ObservationIgnored private let trashItem: (URL) throws -> Void
+
     /// Reopens/fronts the app's window. Installed by the scene so any open path
     /// can display an image even after the window was closed.
     @ObservationIgnored private var windowOpener: (() -> Void)?
@@ -99,11 +103,15 @@ final class ImageModel {
     init(
         recents: RecentFilesStore = RecentFilesStore(),
         defaults: UserDefaults = .standard,
-        pasteboard: NSPasteboard = .general
+        pasteboard: NSPasteboard = .general,
+        trashItem: @escaping (URL) throws -> Void = {
+            try FileManager.default.trashItem(at: $0, resultingItemURL: nil)
+        }
     ) {
         self.recents = recents
         self.defaults = defaults
         self.pasteboard = pasteboard
+        self.trashItem = trashItem
         self.sortOrder = FolderSortOrder(rawValue: defaults.string(forKey: FolderSortOrder.orderKey) ?? "")
             ?? FolderSortOrder.defaultOrder
         self.sortReversed = defaults.bool(forKey: FolderSortOrder.reversedKey)
@@ -322,6 +330,45 @@ final class ImageModel {
         edits.append(edit)
         redoStack.removeAll()
         updateInfo()
+    }
+
+    // MARK: - Trash
+
+    /// True when there is a file on disk that could be trashed. False for a pasted image.
+    var canMoveToTrash: Bool { url != nil }
+
+    /// Moves the current file to the Trash and shows a neighbouring image.
+    ///
+    /// Deliberately does not ask first. The Trash is itself the undo, Finder's ⌘⌫ does not
+    /// prompt either, and a confirmation on every image would defeat the quick culling this
+    /// exists for. It also does not ask about unsaved edits: the file is being thrown away,
+    /// so preserving edits to it makes no sense.
+    func moveToTrash() {
+        guard let url else { return }
+
+        do {
+            try trashItem(url)
+        } catch {
+            errorMessage = "Couldn't move “\(url.lastPathComponent)” to the Trash. "
+                + error.localizedDescription
+            return
+        }
+
+        releaseFileAccess()
+
+        // Drop it from the folder listing and show whatever took its place, or the one
+        // before it if the trashed image was last.
+        guard let index = folderImages.firstIndex(of: url) else {
+            performClose()
+            return
+        }
+        folderImages.remove(at: index)
+        guard !folderImages.isEmpty else {
+            performClose()
+            return
+        }
+        selectionIndex = nil
+        performSelect(min(index, folderImages.count - 1))
     }
 
     // MARK: - Adjustments

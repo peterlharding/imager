@@ -42,6 +42,28 @@ struct ImageExporterTests {
         #expect(ImageExporter.saveAsType(for: nil) == .png)
     }
 
+    // MARK: - Menu title
+
+    /// The command must not silently write a different format than the file it was
+    /// invoked on, which is what a RAW file gets.
+    @Test("The Save As title names the format when it will not be the source's own")
+    func saveAsTitleNamesFallbackFormat() {
+        #expect(ImageExporter.saveAsMenuTitle(for: UTType(filenameExtension: "nef")) == "Save As PNG…")
+        #expect(ImageExporter.saveAsMenuTitle(for: UTType(filenameExtension: "cr2")) == "Save As PNG…")
+        #expect(ImageExporter.saveAsMenuTitle(for: UTType(filenameExtension: "dng")) == "Save As PNG…")
+    }
+
+    @Test("The Save As title stays plain for a writable source", arguments: ["png", "jpg", "tiff", "heic", "gif"])
+    func saveAsTitlePlainForWritableFormats(fileExtension: String) {
+        #expect(ImageExporter.saveAsMenuTitle(for: UTType(filenameExtension: fileExtension)) == "Save As…")
+    }
+
+    /// A file with no recognised extension will be written as PNG, so the title says so.
+    @Test("An unknown source names PNG, since that is what it will write")
+    func saveAsTitleForUnknownSource() {
+        #expect(ImageExporter.saveAsMenuTitle(for: nil) == "Save As PNG…")
+    }
+
     @Test("TIFF is both readable and writable")
     func tiffIsWritable() {
         #expect(ImageExporter.canWrite(.tiff))

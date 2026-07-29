@@ -70,6 +70,16 @@ enum ImageExporter {
         return sourceType
     }
 
+    /// Title for the Save As menu item, naming the format when it will not be the
+    /// source's own. Without this the command silently writes a different format than
+    /// the file it was invoked on, which is exactly the case for camera RAW.
+    static func saveAsMenuTitle(for sourceType: UTType?) -> String {
+        let target = saveAsType(for: sourceType)
+        guard target != sourceType else { return "Save As…" }
+        let name = target.preferredFilenameExtension?.uppercased() ?? "PNG"
+        return "Save As \(name)…"
+    }
+
     /// Presents a save panel restricted to `contentType` and writes the image.
     static func run(image: NSImage, defaultName: String, contentType: UTType) -> ExportResult {
         let panel = NSSavePanel()

@@ -176,7 +176,9 @@ private struct AppCommands: Commands {
                 .disabled(model.image == nil)
         }
         CommandGroup(replacing: .saveItem) {
-            Button("Save As…") {
+            Button(ImageExporter.saveAsMenuTitle(for: model.url.flatMap {
+                UTType(filenameExtension: $0.pathExtension)
+            })) {
                 guard let image = model.image, let url = model.url else { return }
                 let sourceType = UTType(filenameExtension: url.pathExtension)
                 // RAW and other read-only formats fall back to PNG; without this the
@@ -227,6 +229,12 @@ private struct AppCommands: Commands {
             }
             .keyboardShortcut("c", modifiers: [.command, .option])
             .disabled(model.url == nil)
+
+            Divider()
+
+            Button("Move to Trash") { model.moveToTrash() }
+                .keyboardShortcut(.delete, modifiers: .command)
+                .disabled(!model.canMoveToTrash)
 
             Divider()
 

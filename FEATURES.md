@@ -13,12 +13,10 @@ Numbering follows [RELEASING.md](RELEASING.md), where a new feature is a MINOR b
 for backward-compatible fixes only. That is why these are minor releases rather than 0.18.x: they
 all carry features.
 
-## v0.19.0 — folder housekeeping
+## v0.19.0 — folder housekeeping — **done, unreleased**
 
 - Move to Trash while browsing a folder.
 - Name the fallback format in the Save As menu item. *(The only actual fix in the plan.)*
-
-Small and self-contained. Clears the two rough edges left behind before starting anything large.
 
 ## v0.20.0 — edit recipes
 
@@ -57,18 +55,10 @@ banding.
 
 ## Files and browsing
 
-- Move to Trash while browsing a folder, for culling a set quickly.
-  `FileManager.trashItem` works under the sandbox while folder access is held, so this belongs
-  with folder browsing rather than single-file opens.
-  Wants a confirmation, or an undo, since it moves the user's file.
 - Batch processing: apply an edit recipe, or a format conversion, to every image in a folder,
   writing the results somewhere else rather than over the originals.
   Needs recipes first, since a batch is a recipe applied many times.
   The work beyond that is a destination folder, a naming rule, progress, and cancellation.
-- Name the fallback format in the Save As menu item when the source cannot be written,
-  e.g. "Save As PNG…" for a RAW file.
-  The fallback itself shipped in v0.15.0; only the menu wording is missing, so the command
-  silently changes format.
 - Recursive folder browsing, including subfolders.
 
 ## Viewing
@@ -159,6 +149,14 @@ None currently open.
   submenu for folders — v0.16.0
 - File ▸ Edit With: hand the current file to any other application, with declared editors listed
   first and everything else under "All Applications" — v0.17.0
+- Move to Trash (⌘⌫) while browsing, advancing to the next image — unreleased
+
+  No confirmation, deliberately: the Trash is the undo, Finder's ⌘⌫ does not prompt either, and
+  asking on every image would defeat the culling this exists for. It does not ask about unsaved
+  edits either, since the file itself is being thrown away.
+  The trash operation is injected into `ImageModel` so tests do not fill the real Trash.
+- Save As names the format when it differs from the source, e.g. "Save As PNG…" for a RAW
+  file — unreleased
 
 ## Viewing
 

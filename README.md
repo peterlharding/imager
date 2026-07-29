@@ -54,6 +54,10 @@ recent files or settings.
 - Open a single image with **File ▸ Open…**, the toolbar button, or drag-and-drop.
 - Open a folder with **File ▸ Open Folder…** to browse it as a set, with a QuickLook thumbnail
   sidebar and arrow-key navigation.
+- Cull a set with **File ▸ Move to Trash** (**⌘⌫**), which sends the current file to the Trash and
+  moves straight on to the next image.
+  It does not ask first: the Trash is itself the undo, and a prompt on every image would defeat
+  the point of culling.
 - Order a folder by name, date modified, or file size from **View ▸ Sort Images By**, optionally
   reversed.
   Name order is natural, so `photo2` comes before `photo10`.
@@ -180,6 +184,7 @@ swatches and RGB sliders, or a checkerboard, with an opacity slider and a live p
 | ⇧⌘S | Save As… |
 | ⇧⌘R | Show in Finder |
 | ⌥⌘C | Copy Path |
+| ⌘⌫ | Move to Trash |
 | ⌘I | Show / Hide Image Info |
 | ⌥⌘S | Show / Hide Thumbnails |
 | ← / → | Previous / Next Image |
