@@ -92,6 +92,10 @@ final class ImageModel {
     /// Held security-scoped access to the folder currently being browsed.
     @ObservationIgnored private var folderAccess: URL?
 
+    /// Held security-scoped access to the file currently displayed, kept so the file
+    /// can still be acted on after it has been loaded.
+    @ObservationIgnored private var fileAccess: URL?
+
     init(
         recents: RecentFilesStore = RecentFilesStore(),
         defaults: UserDefaults = .standard,
@@ -140,6 +144,7 @@ final class ImageModel {
         edits.removeAll()
         redoStack.removeAll()
         savedEdits = []
+        releaseFileAccess()
         clearFolder()
     }
 
@@ -217,13 +222,21 @@ final class ImageModel {
     private func display(_ url: URL, record: Bool) {
         // For standalone files this grants access; for folder-derived files access
         // comes from the held folder scope, so this is a harmless no-op.
+        //
+        // Access is held for as long as the file is on screen rather than released
+        // after loading. Anything acting on the file later needs it: handing it to
+        // another application only grants that application access while Imager still
+        // holds its own, and a file opened from a resolved bookmark has no access at
+        // all once the scope is dropped.
+        releaseFileAccess()
         let scoped = url.startAccessingSecurityScopedResource()
-        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
 
         guard let image = NSImage(contentsOf: url) else {
+            if scoped { url.stopAccessingSecurityScopedResource() }
             self.errorMessage = "Couldn't read an image from \(url.lastPathComponent)."
             return
         }
+        fileAccess = scoped ? url : nil
         self.image = image
         self.originalImage = image
         self.url = url
@@ -364,6 +377,7 @@ final class ImageModel {
         }
         ensureWindow()
         clearFolder()
+        releaseFileAccess()
         image = pasted
         originalImage = pasted
         url = nil
@@ -379,6 +393,13 @@ final class ImageModel {
         guard let originalImage else { return }
         image = edits.isEmpty ? originalImage : edits.applied(to: originalImage)
         updateInfo()
+    }
+
+    private func releaseFileAccess() {
+        if let fileAccess {
+            fileAccess.stopAccessingSecurityScopedResource()
+            self.fileAccess = nil
+        }
     }
 
     private func clearFolder() {

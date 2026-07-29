@@ -82,10 +82,19 @@ enum ExternalEditor {
     }
 
     /// Opens `url` in `app`, bringing it to the front.
+    ///
+    /// The file's security scope has to be held across the call: macOS grants the
+    /// receiving application access only while Imager still holds its own, otherwise
+    /// the hand-off fails with "Imager does not have permission to open …".
+    /// The open is asynchronous, so the scope is released in the completion handler
+    /// rather than on return.
     static func open(_ url: URL, in app: URL) {
+        let scoped = url.startAccessingSecurityScopedResource()
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = true
-        NSWorkspace.shared.open([url], withApplicationAt: app, configuration: configuration)
+        NSWorkspace.shared.open([url], withApplicationAt: app, configuration: configuration) { _, _ in
+            if scoped { url.stopAccessingSecurityScopedResource() }
+        }
     }
 
     /// Presents a panel to pick any application, for tools LaunchServices does not
