@@ -55,9 +55,9 @@ Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](
 - Finder registration as a viewer for images and folders, including drop-on-icon — v0.10.0
 - Close Image (⌘W), leaving the window open — v0.9.2
 - Folder sort order by name, date modified or file size, reversible and remembered — v0.14.0
-- Copy Image (⌘C) and Paste Image (⌘V), with a pasted image treated as unsaved — unreleased
-- Save As falls back to PNG for formats macOS can read but not write, such as camera RAW —
-  unreleased
+- Copy Image (⌘C) and Paste Image (⌘V), with a pasted image treated as unsaved — v0.15.0
+- Save As falls back to PNG for formats macOS can read but not write, such as camera RAW — v0.15.0
+- Camera RAW support, inherited from ImageIO and confirmed on Nikon NEF — v0.15.0
 
 ## Viewing
 
@@ -76,3 +76,4 @@ Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](
 - Full project documentation in the README — v0.12.0
 - Unit test harness on Swift Testing, with a shared scheme so tests run from a clone — v0.13.0
 - Signed, notarised, downloadable builds attached to GitHub releases — v0.13.1
+- Feature tracker (this file), and file format support documented in the README — v0.15.0
