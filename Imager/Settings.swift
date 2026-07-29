@@ -114,7 +114,10 @@ struct GeneralSettings: View {
                         Text("\(Int(interval))").monospacedDigit()
                     }
                 }
-                Toggle("Repeat after the last image", isOn: $loops)
+                Picker("After the last image", selection: $loops) {
+                    Text("Repeat continuously").tag(true)
+                    Text("Stop the slideshow").tag(false)
+                }
             }
         }
         .formStyle(.grouped)
