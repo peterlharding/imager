@@ -213,6 +213,7 @@ folder in that case.
 | --- | --- |
 | `Imager/` | Application source, an Xcode filesystem-synchronized group |
 | `ImagerTests/` | Unit tests, also a filesystem-synchronized group |
+| `data/` | Test images for driving the app by hand, and the script that generates them |
 | `Imager.xcodeproj` | Xcode project |
 | `Info.plist` | Bundle configuration, including the Finder document types |
 | `CHANGELOG.md` | All notable changes, following Keep a Changelog |

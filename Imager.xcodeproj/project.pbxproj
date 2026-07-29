@@ -25,6 +25,7 @@
 		1A00000000000000000000D4 /* release_notes */ = {isa = PBXFileReference; lastKnownFileType = folder; path = release_notes; sourceTree = "<group>"; };
 		1A00000000000000000000D5 /* RELEASING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASING.md; sourceTree = "<group>"; };
 		1A00000000000000000000D6 /* FEATURES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = FEATURES.md; sourceTree = "<group>"; };
+		1A00000000000000000000D7 /* data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = data; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -55,6 +56,7 @@
 			children = (
 				1A00000000000000000000A1 /* Imager */,
 				1A00000000000000000000A2 /* ImagerTests */,
+				1A00000000000000000000D7 /* data */,
 				1A00000000000000000000D0 /* Documentation */,
 				1A0000000000000000000003 /* Products */,
 			);
