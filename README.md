@@ -104,6 +104,20 @@ To keep an edit, use **Save As…** or **Export As** to write a new file.
   **Paste Image** (**⌘V**) opens an image from it.
   A pasted image has no file behind it, so Imager treats it as unsaved until you export it.
 
+### Handing off to another editor
+
+**File ▸ Edit With** opens the current file in another application: GIMP, darktable, the DxO
+suite, an AI upscaler, or anything else installed.
+Imager knows nothing about any of them, so a tool installed later appears on its own.
+
+Applications that declare themselves editors of the file type are listed first, everything else
+sits under **All Applications**, and **Other…** picks any application at all.
+The split is only a hint: darktable, for one, declares itself a viewer of every image type
+despite being an editor, so it appears in the second group.
+
+Edit With opens the file **as saved on disk**, so save a copy first if you want unsaved crops or
+rotations carried across.
+
 If an image has edits that have not been written out, Imager asks before letting them go, whether
 you are opening something else, closing the image, moving to the next image in a folder, or
 quitting the app.

@@ -9,6 +9,14 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+### Added
+
+- File ▸ Edit With hands the current file to another application: GIMP, darktable, the DxO
+  suite, an upscaler, or anything else installed. Applications that declare themselves editors
+  of the file type are listed first, the rest sit under "All Applications", and "Other…" picks
+  any application at all. Imager needs no knowledge of the tool, so anything installed later
+  appears on its own.
+
 ## [0.16.0] - 2026-07-29
 
 See [release_notes/0.16.0.md](release_notes/0.16.0.md) for details.

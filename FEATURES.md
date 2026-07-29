@@ -6,10 +6,15 @@ Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](
 
 ## Editing
 
-- Image adjustments: brightness, contrast, saturation.
+- Image adjustments: brightness, contrast, hue and saturation, exposure.
 - Drag an image out of the window to another app.
 - Resize and scale an image to given dimensions.
 - Straighten with a visible grid overlay.
+- Edit recipes: record the sequence of changes made to an image, let it be edited, save it, and
+  apply it to a whole folder.
+  The `ImageEdit` history added in v0.14.0 is already this, minus persistence: making it
+  `Codable` gives saved recipes, and applying one to a folder is then a loop.
+  New adjustments should be added as `ImageEdit` cases so they join undo and recipes for free.
 
 ## Files and browsing
 
@@ -28,6 +33,35 @@ Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](
 
 - Port the image-handling code from the old C# program (the original goal for the app).
 - Print support, which would need the printing entitlement turned back on.
+
+## Integration with other tools
+
+The tools below - darktable, the DxO suite, GIMP, AI upscalers such as Topaz, and denoisers -
+all want the same thing from Imager: hand the image I am looking at to that application.
+That is one feature, not five, and it needs no per-tool knowledge.
+"Edit With…" (shipped, see Done) covers every one of them, including tools installed later.
+
+What remains is the part that genuinely differs per tool:
+
+- Favourite editors: let a few chosen applications be pinned to the top of Edit With and
+  remembered.
+  This matters because the menu cannot rank them automatically: darktable declares itself a
+  `Viewer` of every image type rather than an `Editor`, and DxO is likely the same, so they sort
+  into "All Applications" alongside browsers and chat apps.
+- Hand over the *edited* image rather than the file on disk, by exporting to a temporary file
+  first. Today Edit With opens the file as saved, so unsaved crops or rotations are not carried
+  across.
+- Notice a sidecar next to a RAW file and report it in the info inspector: `.xmp` for darktable,
+  `.dop` for DxO. Needs folder access, so it works while browsing a folder rather than after
+  opening a single file.
+- Reload automatically when a file changes on disk, so a round trip through an external editor
+  shows up without reopening.
+- Watch a tool's export folder and offer to open what appears.
+
+Not achievable, and deliberately not listed as a goal: showing darktable's or DxO's edits inside
+Imager.
+Both are non-destructive and render through their own pipelines, so only they can display their
+own work.
 
 ## Known issues
 
@@ -58,6 +92,8 @@ None currently open.
 - Camera RAW support, inherited from ImageIO and confirmed on Nikon NEF — v0.15.0
 - "Open in Imager" Finder service for folders and images, since Finder offers no Open With
   submenu for folders — v0.16.0
+- File ▸ Edit With: hand the current file to any other application, with declared editors listed
+  first and everything else under "All Applications" — unreleased
 
 ## Viewing
 

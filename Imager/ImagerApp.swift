@@ -113,6 +113,19 @@ private struct AppCommands: Commands {
     private var sortReversedBinding: Binding<Bool> {
         Binding(get: { model.sortReversed }, set: { model.sortReversed = $0 })
     }
+
+    /// Applications for the Edit With menu, split into declared editors and the rest.
+    private var externalEditors: (editors: [URL], others: [URL]) {
+        guard let url = model.url else { return ([], []) }
+        let apps = ExternalEditor.applications(forOpening: url)
+        return ExternalEditor.split(apps, for: UTType(filenameExtension: url.pathExtension))
+    }
+
+    /// Hands the file on disk to another application.
+    private func editWith(_ app: URL) {
+        guard let url = model.url else { return }
+        ExternalEditor.open(url, in: app)
+    }
     @FocusedValue(\.inspectorVisible) private var inspectorVisible
     @FocusedValue(\.sidebarVisible) private var sidebarVisible
     @FocusedValue(\.zoomController) private var zoom
@@ -213,6 +226,30 @@ private struct AppCommands: Commands {
                 if let url = model.url { FileActions.copyPath(url) }
             }
             .keyboardShortcut("c", modifiers: [.command, .option])
+            .disabled(model.url == nil)
+
+            Divider()
+
+            Menu("Edit With") {
+                let split = externalEditors
+                ForEach(split.editors, id: \.self) { app in
+                    Button(ExternalEditor.name(of: app)) { editWith(app) }
+                }
+                if !split.editors.isEmpty, !split.others.isEmpty {
+                    Divider()
+                }
+                if !split.others.isEmpty {
+                    Menu("All Applications") {
+                        ForEach(split.others, id: \.self) { app in
+                            Button(ExternalEditor.name(of: app)) { editWith(app) }
+                        }
+                    }
+                }
+                Divider()
+                Button("Other…") {
+                    if let app = ExternalEditor.chooseApplication() { editWith(app) }
+                }
+            }
             .disabled(model.url == nil)
         }
         // The stock pasteboard items act on the responder chain, which has no text or
