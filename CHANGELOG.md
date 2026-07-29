@@ -9,6 +9,10 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-07-30
+
+See [release_notes/0.19.0.md](release_notes/0.19.0.md) for details.
+
 ### Added
 
 - File ▸ Move to Trash (⌘⌫) sends the current file to the Trash and moves on to the next image in
@@ -319,7 +323,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://github.com/peterlharding/imager/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/peterlharding/imager/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/peterlharding/imager/releases/tag/v0.19.0
 [0.18.0]: https://github.com/peterlharding/imager/releases/tag/v0.18.0
 [0.17.0]: https://github.com/peterlharding/imager/releases/tag/v0.17.0
 [0.16.0]: https://github.com/peterlharding/imager/releases/tag/v0.16.0
