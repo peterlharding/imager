@@ -64,10 +64,38 @@ wanted.
 
 ## v0.21.0 — batch processing
 
-Apply a recipe, or a format conversion, across a whole folder.
-**Depends on v0.20.0** — a batch is a recipe applied many times, so recipes have to exist first.
-Neither `RecipeStore` nor `[ImageEdit].applied(to:)` needs any UI, so the batch itself really is a
-loop; the work is the destination folder, a naming rule, progress, and cancellation.
+Apply a recipe, or the edits currently on screen, to every image in a folder.
+Recipes shipped in v0.20.0, so this is unblocked. Planned in detail, ready to build.
+
+**Two safety properties, which drove the decisions.**
+
+*Never write over an original.* A batch that replaces someone's photos is the one failure that
+cannot be undone. So the destination is chosen explicitly, **the source folder is refused as a
+destination** — which makes touching the originals structurally impossible rather than merely
+unlikely — and a name that already exists is **numbered rather than overwritten**, as Finder does.
+Numbering was chosen over skipping because a second run after changing the recipe would otherwise
+appear to do nothing.
+
+*One bad file does not stop the run.* An unreadable image or a failed write is collected and
+reported in a summary — "38 of 40 written, 2 failed" — rather than aborting midway.
+
+**Shape.** Source is the folder currently being browsed, so it reuses existing state, respects the
+sort order on screen, and needs no second picker; the command is disabled when no folder is open.
+What gets applied is a saved recipe or the current `recipeEdits`, the latter being nearly free and
+the obvious thing to want. Format is either the source's own, reusing the existing PNG fallback so
+RAW input yields PNG, or an explicit choice from the export formats.
+Progress is a sheet with a bar, the current filename and Cancel; work runs off the main thread and
+cancellation is checked between images, which at roughly 50 ms each is responsive enough.
+Sequential rather than parallel, to keep memory bounded on a folder of 24 MP files.
+
+**Build order.** `BatchProcessor.process(...)` and the naming/collision logic first: both are pure
+and fully testable headlessly, and both are where the bugs would be. Then `BatchRunner`
+(`@Observable`) for progress and cancellation, then the sheet and File ▸ Process Folder….
+
+**Will need a real run.** Writing to the destination is a sandbox operation, and that is the third
+feature in a row where the suite cannot see the thing most likely to break. The destination comes
+from an open panel so it should carry write access, but treat that as unverified until it has been
+run. See [[imager-sandbox-access]] in memory.
 
 ## v0.22.0 — RAW development
 
