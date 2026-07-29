@@ -9,6 +9,14 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+### Added
+
+- Edit ▸ Copy Image (⌘C) puts the image on screen, including any edits, on the clipboard.
+- Edit ▸ Paste Image (⌘V) shows an image from the clipboard. It has no file behind it, so it
+  counts as unsaved straight away and closing or quitting asks before discarding it. Export As
+  settles it.
+- `FEATURES.md`, tracking planned and shipped features with the release each one landed in.
+
 ## [0.14.0] - 2026-07-29
 
 See [release_notes/0.14.0.md](release_notes/0.14.0.md) for details.

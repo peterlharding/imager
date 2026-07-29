@@ -183,6 +183,17 @@ private struct AppCommands: Commands {
             .keyboardShortcut("c", modifiers: [.command, .option])
             .disabled(model.url == nil)
         }
+        // The stock pasteboard items act on the responder chain, which has no text or
+        // image responder in this app, so they are inert. Replace them with commands
+        // that copy and paste the image itself.
+        CommandGroup(replacing: .pasteboard) {
+            Button("Copy Image") { model.copyToPasteboard() }
+                .keyboardShortcut("c", modifiers: .command)
+                .disabled(model.image == nil)
+
+            Button("Paste Image") { model.paste() }
+                .keyboardShortcut("v", modifiers: .command)
+        }
         // The stock Undo/Redo drive the responder chain's undo manager, which knows
         // nothing about image edits. Point them at the model's own history instead.
         CommandGroup(replacing: .undoRedo) {

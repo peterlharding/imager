@@ -21,7 +21,11 @@ final class ImageModel {
     private(set) var redoStack: [ImageEdit] = []
 
     /// The edit history as of the last save or load, so "unsaved" survives undo and redo.
-    private var savedEdits: [ImageEdit] = []
+    ///
+    /// `nil` means nothing on disk corresponds to what is on screen, which is the case
+    /// for a pasted image until it is exported. That makes a pasted image count as
+    /// unsaved straight away, so closing or quitting asks before throwing it away.
+    private var savedEdits: [ImageEdit]? = []
 
     /// True when the working image differs from the original (an edit can be undone).
     var canRevert: Bool { !edits.isEmpty }
@@ -78,6 +82,9 @@ final class ImageModel {
 
     @ObservationIgnored private let defaults: UserDefaults
 
+    /// Injectable so tests never touch the user's real clipboard.
+    @ObservationIgnored private let pasteboard: NSPasteboard
+
     /// Reopens/fronts the app's window. Installed by the scene so any open path
     /// can display an image even after the window was closed.
     @ObservationIgnored private var windowOpener: (() -> Void)?
@@ -85,9 +92,14 @@ final class ImageModel {
     /// Held security-scoped access to the folder currently being browsed.
     @ObservationIgnored private var folderAccess: URL?
 
-    init(recents: RecentFilesStore = RecentFilesStore(), defaults: UserDefaults = .standard) {
+    init(
+        recents: RecentFilesStore = RecentFilesStore(),
+        defaults: UserDefaults = .standard,
+        pasteboard: NSPasteboard = .general
+    ) {
         self.recents = recents
         self.defaults = defaults
+        self.pasteboard = pasteboard
         self.sortOrder = FolderSortOrder(rawValue: defaults.string(forKey: FolderSortOrder.orderKey) ?? "")
             ?? FolderSortOrder.defaultOrder
         self.sortReversed = defaults.bool(forKey: FolderSortOrder.reversedKey)
@@ -127,7 +139,7 @@ final class ImageModel {
         errorMessage = nil
         edits.removeAll()
         redoStack.removeAll()
-        savedEdits.removeAll()
+        savedEdits = []
         clearFolder()
     }
 
@@ -218,7 +230,7 @@ final class ImageModel {
         self.errorMessage = nil
         self.edits.removeAll()
         self.redoStack.removeAll()
-        self.savedEdits.removeAll()
+        self.savedEdits = []
         updateInfo()
         if record { recents.record(url) }
     }
@@ -318,8 +330,48 @@ final class ImageModel {
         guard originalImage != nil else { return }
         edits.removeAll()
         redoStack.removeAll()
-        savedEdits.removeAll()
+        // A pasted image still has no file behind it, so reverting leaves it unsaved.
+        savedEdits = url == nil ? nil : []
         rebuildImage()
+    }
+
+    // MARK: - Clipboard
+
+    /// True when the pasteboard holds something that can be pasted as an image.
+    var canPaste: Bool {
+        pasteboard.canReadObject(forClasses: [NSImage.self], options: nil)
+    }
+
+    /// Puts the image currently on screen, including any edits, on the pasteboard.
+    @discardableResult
+    func copyToPasteboard() -> Bool {
+        guard let image else { return false }
+        pasteboard.clearContents()
+        return pasteboard.writeObjects([image])
+    }
+
+    /// Shows an image from the pasteboard. The result has no file behind it, so it
+    /// counts as unsaved until it is written out with Export As.
+    func paste() {
+        confirmDiscardingEdits { [self] in performPaste() }
+    }
+
+    private func performPaste() {
+        guard let pasted = pasteboard.readObjects(forClasses: [NSImage.self], options: nil)?
+            .first as? NSImage else {
+            errorMessage = "There is no image on the clipboard."
+            return
+        }
+        ensureWindow()
+        clearFolder()
+        image = pasted
+        originalImage = pasted
+        url = nil
+        errorMessage = nil
+        edits.removeAll()
+        redoStack.removeAll()
+        savedEdits = nil
+        updateInfo()
     }
 
     /// Recomputes the displayed image by replaying `edits` onto the original.

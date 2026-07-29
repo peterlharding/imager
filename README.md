@@ -100,6 +100,9 @@ To keep an edit, use **Save As…** or **Export As** to write a new file.
 
 - **Save As…** (**⇧⌘S**) writes a copy in the original file's format.
 - **Export As** converts to PNG, JPEG, GIF, TIFF, or HEIC.
+- **Copy Image** (**⌘C**) puts what's on screen, edits included, on the clipboard, and
+  **Paste Image** (**⌘V**) opens an image from it.
+  A pasted image has no file behind it, so Imager treats it as unsaved until you export it.
 
 If an image has edits that have not been written out, Imager asks before letting them go, whether
 you are opening something else, closing the image, moving to the next image in a folder, or
@@ -137,6 +140,7 @@ swatches and RGB sliders, or a checkerboard, with an opacity slider and a live p
 | ⌘0 | Zoom to Fit |
 | ⌘1 | Actual Size |
 | ⌘Z / ⇧⌘Z | Undo / Redo |
+| ⌘C / ⌘V | Copy Image / Paste Image |
 | ⌘K | Crop to Selection |
 | ⌘L / ⌘R | Rotate Left / Rotate Right |
 | ⌘, | Settings |
@@ -164,6 +168,7 @@ folder in that case.
 | `Imager.xcodeproj` | Xcode project |
 | `Info.plist` | Bundle configuration, including the Finder document types |
 | `CHANGELOG.md` | All notable changes, following Keep a Changelog |
+| `FEATURES.md` | Planned and shipped features, with the release each landed in |
 | `release_notes/` | One user-facing notes file per release |
 | `RELEASING.md` | The release process |
 
