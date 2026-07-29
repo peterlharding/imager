@@ -18,6 +18,9 @@ Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](
 - Name the fallback format in the Save As menu item when the source cannot be written,
   e.g. "Save As PNG…" for a RAW file.
 - Recursive folder browsing, including subfolders.
+- An "Open in Imager" entry when right-clicking a folder in Finder.
+  Finder shows no Open With submenu for folders whatever an app declares, so this needs an
+  `NSServices` entry or a Finder Sync extension rather than a document type.
 
 ## Viewing
 
@@ -31,9 +34,7 @@ Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](
 
 ## Known issues
 
-- The slideshow toolbar button did not appear when the app was launched with a folder from
-  Finder, though the menu command and ⇧⌘F worked.
-  Not reproduced since. See [issue #1](https://github.com/peterlharding/imager/issues/1).
+None currently open.
 
 # Done
 
