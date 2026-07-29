@@ -72,63 +72,77 @@ The `CURRENT_PROJECT_VERSION` build setting is the build number and can be bumpe
    git push origin v<version>
    ```
 
-9. **(Optional) Publish a GitHub release** from the tag, using the matching `release_notes/<version>.md` as the body:
+9. **(Optional) Build and notarise the distributable app**, if this release is going to carry a
+   download. Do this *before* creating the GitHub release: see the warning under step 10.
+
+   This needs a Developer ID Application certificate in the login keychain, and notarisation
+   credentials stored once as a keychain profile:
 
    ```sh
-   gh release create v<version> --title "Imager <version>" --notes-file release_notes/<version>.md
+   xcrun notarytool store-credentials "imager-notary" --apple-id <apple-id> --team-id T5RDMAD9Q4
    ```
 
-   GitHub marks whichever release was *created* most recently as "Latest", regardless of version
-   order, so backfilling an older version steals the badge.
-   Put it back with `gh release edit v<version> --latest`.
+   Then:
 
-10. **(Optional) Attach a signed, notarised build** to that release.
+   ```sh
+   # Build a Release archive.
+   xcodebuild archive -project Imager.xcodeproj -scheme Imager -configuration Release \
+     -destination 'platform=macOS' -archivePath build/Imager.xcarchive
 
-    This needs a Developer ID Application certificate in the login keychain, and notarisation
-    credentials stored once as a keychain profile:
+   # Export it. This step is what re-signs with Developer ID; see ExportOptions.plist.
+   xcodebuild -exportArchive -archivePath build/Imager.xcarchive \
+     -exportOptionsPlist ExportOptions.plist -exportPath build/export
+
+   # Zip with ditto rather than zip, so symlinks and signing metadata survive.
+   ditto -c -k --sequesterRsrc --keepParent build/export/Imager.app build/Imager-<version>.zip
+
+   # Notarise, and wait for the verdict.
+   xcrun notarytool submit build/Imager-<version>.zip --keychain-profile "imager-notary" --wait
+
+   # Staple the ticket, then re-zip. The ticket attaches to the .app, so the zip
+   # made above does not contain it.
+   xcrun stapler staple build/export/Imager.app
+   rm build/Imager-<version>.zip
+   ditto -c -k --sequesterRsrc --keepParent build/export/Imager.app build/Imager-<version>.zip
+   ```
+
+   **Verify before going further.** Extract the zip somewhere and confirm what a downloader
+   will see:
+
+   ```sh
+   xcrun stapler validate <extracted>/Imager.app
+   spctl --assess --type execute --verbose=2 <extracted>/Imager.app
+   ```
+
+   Expect `accepted` and `source=Notarized Developer ID`.
+   Also confirm with `codesign -dv --verbose=4` that the authority reads
+   `Developer ID Application`, not `Apple Development`.
+   A development-signed app will not launch on anyone else's Mac, and the archive step signs with
+   the development certificate until export replaces it.
+
+10. **(Optional) Publish a GitHub release** from the tag, using the matching
+    `release_notes/<version>.md` as the body, and attaching the artifact from step 9 in the
+    same command:
 
     ```sh
-    xcrun notarytool store-credentials "imager-notary" --apple-id <apple-id> --team-id T5RDMAD9Q4
+    gh release create v<version> --title "Imager <version>" \
+      --notes-file release_notes/<version>.md \
+      build/Imager-<version>.zip
     ```
 
-    Then:
+    Omit the trailing file for a source-only release.
 
-    ```sh
-    # Build a Release archive.
-    xcodebuild archive -project Imager.xcodeproj -scheme Imager -configuration Release \
-      -destination 'platform=macOS' -archivePath build/Imager.xcarchive
+    > **Releases on this repo are immutable, so creation is a one-shot.**
+    > Assets cannot be added afterwards: `gh release upload` against an existing release fails
+    > with `HTTP 422: Cannot upload assets to an immutable release`.
+    > Worse, deleting the release does not undo anything, because the tag name stays reserved -
+    > recreating it fails with `tag_name was used by an immutable release`, leaving the version
+    > with no release page and no way to make one.
+    > Build and verify the artifact first, then create the release once, with everything attached.
 
-    # Export it. This step is what re-signs with Developer ID; see ExportOptions.plist.
-    xcodebuild -exportArchive -archivePath build/Imager.xcarchive \
-      -exportOptionsPlist ExportOptions.plist -exportPath build/export
-
-    # Zip with ditto rather than zip, so symlinks and signing metadata survive.
-    ditto -c -k --sequesterRsrc --keepParent build/export/Imager.app build/Imager-<version>.zip
-
-    # Notarise, and wait for the verdict.
-    xcrun notarytool submit build/Imager-<version>.zip --keychain-profile "imager-notary" --wait
-
-    # Staple the ticket, then re-zip. The ticket attaches to the .app, so the zip
-    # made above does not contain it.
-    xcrun stapler staple build/export/Imager.app
-    rm build/Imager-<version>.zip
-    ditto -c -k --sequesterRsrc --keepParent build/export/Imager.app build/Imager-<version>.zip
-
-    gh release upload v<version> build/Imager-<version>.zip
-    ```
-
-    **Verify before uploading.** Extract the zip somewhere and confirm what a downloader will see:
-
-    ```sh
-    xcrun stapler validate <extracted>/Imager.app
-    spctl --assess --type execute --verbose=2 <extracted>/Imager.app
-    ```
-
-    Expect `accepted` and `source=Notarized Developer ID`.
-    Also confirm with `codesign -dv --verbose=4` that the authority reads
-    `Developer ID Application`, not `Apple Development`.
-    A development-signed app will not launch on anyone else's Mac, and the archive step signs with
-    the development certificate until export replaces it.
+    GitHub marks whichever release was *created* most recently as "Latest", regardless of version
+    order, so backfilling an older version steals the badge.
+    Put it back with `gh release edit v<version> --latest`.
 
 ## Commit conventions
 

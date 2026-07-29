@@ -66,9 +66,24 @@ even mid-flow - approval to commit and tag is not approval to publish.
 GitHub releases were adopted starting at **v0.10.0**. Do not backfill v0.3.0-v0.9.2; that was a
 deliberate decision. v0.1.0 and v0.2.0 have no tags at all.
 
+**Releases on this repo are immutable. Creating one is a one-shot, irreversible act.**
+
+- Assets cannot be added later. `gh release upload` fails with
+  `HTTP 422: Cannot upload assets to an immutable release`.
+- Deleting the release does **not** give you another go. The tag name stays reserved, and
+  recreating fails with `tag_name was used by an immutable release`, leaving that version with
+  no release page and no way to make one. This has already cost v0.13.0 its release page.
+- So: if the release is carrying a download, build, notarise, staple and *verify* the artifact
+  first (RELEASING.md step 9), then create the release once with the file attached.
+
 ```sh
-gh release create v<version> --title "Imager <version>" --notes-file release_notes/<version>.md
+gh release create v<version> --title "Imager <version>" \
+  --notes-file release_notes/<version>.md \
+  build/Imager-<version>.zip
 ```
+
+Never delete an immutable release hoping to recreate it. If a release is wrong, the recoverable
+paths are cutting the next patch version or leaving it and correcting forward - ask the user which.
 
 Create them oldest-first when publishing several, so "Latest" lands on the newest. `gh` is
 installed and authenticated as `peterlharding` over SSH. `gh auth login` is interactive - ask the
