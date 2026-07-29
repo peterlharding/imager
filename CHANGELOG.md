@@ -9,6 +9,17 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-07-29
+
+See [release_notes/0.13.1.md](release_notes/0.13.1.md) for details.
+
+This release is packaging only. The application is unchanged from 0.13.0.
+
+It exists because 0.13.0 was published without its signed, notarised download, and releases on
+this repository are immutable: an asset cannot be added to an existing release, and deleting the
+release reserves its tag name permanently rather than allowing it to be recreated. 0.13.1 is the
+first release to carry a downloadable build.
+
 ## [0.13.0] - 2026-07-29
 
 See [release_notes/0.13.0.md](release_notes/0.13.0.md) for details.
@@ -213,7 +224,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://github.com/peterlharding/imager/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/peterlharding/imager/compare/v0.13.1...HEAD
+[0.13.1]: https://github.com/peterlharding/imager/releases/tag/v0.13.1
 [0.13.0]: https://github.com/peterlharding/imager/releases/tag/v0.13.0
 [0.12.0]: https://github.com/peterlharding/imager/releases/tag/v0.12.0
 [0.11.0]: https://github.com/peterlharding/imager/releases/tag/v0.11.0
