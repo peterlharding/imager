@@ -6,7 +6,39 @@ Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](
 
 ## Editing
 
-- Image adjustments: brightness, contrast, hue and saturation, exposure.
+- **Image adjustments.** Planned in detail, ready to build:
+
+  Seven values in one adjustment: exposure, highlights, shadows, contrast, saturation, vibrance,
+  hue.
+  Five Core Image passes, in this order:
+  `CIExposureAdjust` → `CIHighlightShadowAdjust` → `CIColorControls` (contrast and saturation
+  together) → `CIVibrance` → `CIHueAdjust`.
+
+  *Where it lives:* an **Adjust** pane in the inspector beside Image Info, switched by a
+  segmented control, with a Reset button.
+  Chosen over a toolbar popover so nothing covers the image while a slider is being dragged.
+
+  *How it fits the edit history:* a single `ImageEdit.adjust(Adjustments)` case holding all seven
+  values, so adjustments inherit undo, redo, unsaved tracking and recipes.
+  One drag session appends one edit and updates it in place while dragging, rather than appending
+  per slider tick, which would give a 200-step undo history from one drag.
+
+  *The replay rule that makes it fast:* adjustment values are absolute and per-pixel, so they
+  commute with crop, rotate and flip, and **only the last `.adjust` in the list applies** —
+  earlier ones are superseded.
+  Replay therefore means: all geometry edits in order, then one adjustment pass.
+  Any number of adjustment sessions costs one filter pass, and the geometry result can be cached
+  so live dragging re-renders from the cache rather than from the original.
+
+  *Expected to bite:* `CIHighlightShadowAdjust` has `inputRadius` defaulting to 0, which may make
+  it a no-op and needs checking against a real photo; strong exposure moves will band unless the
+  `CIContext` works in a linear colour space; and performance needs measuring on a real 24 MP
+  file before any optimisation is added.
+
+- RAW development via `CIRAWFilter(imageURL:)`, exposing exposure, boost and neutral
+  temperature/tint rendered from sensor data.
+  Distinct from the adjustments above, which act on the already-demosaiced 8-bit rendering that
+  `NSImage` hands back, so they cannot recover highlights the way darktable or DxO do.
 - Drag an image out of the window to another app.
 - Resize and scale an image to given dimensions.
 - Straighten with a visible grid overlay.
