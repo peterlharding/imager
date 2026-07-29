@@ -10,6 +10,13 @@ enum ImageEdit: Equatable {
     case crop(CGRect)
     case rotate(degreesClockwise: Double)
     case flip(horizontal: Bool)
+    case adjust(Adjustments)
+
+    /// True for a tonal or colour adjustment, as opposed to a geometry change.
+    var isAdjustment: Bool {
+        if case .adjust = self { return true }
+        return false
+    }
 
     /// Name for the Undo/Redo menu items, e.g. "Undo Rotate".
     var actionName: String {
@@ -17,6 +24,7 @@ enum ImageEdit: Equatable {
         case .crop: "Crop"
         case .rotate: "Rotate"
         case .flip(let horizontal): horizontal ? "Flip Horizontal" : "Flip Vertical"
+        case .adjust: "Adjust"
         }
     }
 
@@ -26,6 +34,7 @@ enum ImageEdit: Equatable {
         case .crop(let rect): Self.cropped(image, to: rect)
         case .rotate(let degrees): ImageTransform.rotated(image, degreesClockwise: degrees)
         case .flip(let horizontal): ImageTransform.flipped(image, horizontal: horizontal)
+        case .adjust(let adjustments): ImageAdjuster.apply(adjustments, to: image)
         }
     }
 
@@ -40,9 +49,21 @@ enum ImageEdit: Equatable {
 }
 
 extension Array where Element == ImageEdit {
-    /// Replays every edit in order. A step that cannot be applied is skipped rather
-    /// than abandoning the rest of the history.
+    /// Replays the history: every geometry edit in order, then a single adjustment.
+    /// A step that cannot be applied is skipped rather than abandoning the rest.
+    ///
+    /// Only the last adjustment is applied, because adjustment values are absolute -
+    /// a later one entirely supersedes an earlier one. That keeps any number of
+    /// adjustment sessions to one filter pass however long the history grows.
+    ///
+    /// Geometry always runs first, so the result is the adjustment applied to the
+    /// final cropped and rotated image. The per-pixel filters commute with geometry
+    /// anyway; fixing the order matters for the highlight and shadow pass, which is
+    /// spatial and would otherwise differ near a crop edge.
     func applied(to image: NSImage) -> NSImage {
-        reduce(image) { $1.apply(to: $0) ?? $0 }
+        let geometry = lazy.filter { !$0.isAdjustment }
+        let transformed = geometry.reduce(image) { $1.apply(to: $0) ?? $0 }
+        guard let adjustment = last(where: { $0.isAdjustment }) else { return transformed }
+        return adjustment.apply(to: transformed) ?? transformed
     }
 }

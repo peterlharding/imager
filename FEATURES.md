@@ -6,39 +6,11 @@ Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](
 
 ## Editing
 
-- **Image adjustments.** Planned in detail, ready to build:
-
-  Seven values in one adjustment: exposure, highlights, shadows, contrast, saturation, vibrance,
-  hue.
-  Five Core Image passes, in this order:
-  `CIExposureAdjust` → `CIHighlightShadowAdjust` → `CIColorControls` (contrast and saturation
-  together) → `CIVibrance` → `CIHueAdjust`.
-
-  *Where it lives:* an **Adjust** pane in the inspector beside Image Info, switched by a
-  segmented control, with a Reset button.
-  Chosen over a toolbar popover so nothing covers the image while a slider is being dragged.
-
-  *How it fits the edit history:* a single `ImageEdit.adjust(Adjustments)` case holding all seven
-  values, so adjustments inherit undo, redo, unsaved tracking and recipes.
-  One drag session appends one edit and updates it in place while dragging, rather than appending
-  per slider tick, which would give a 200-step undo history from one drag.
-
-  *The replay rule that makes it fast:* adjustment values are absolute and per-pixel, so they
-  commute with crop, rotate and flip, and **only the last `.adjust` in the list applies** —
-  earlier ones are superseded.
-  Replay therefore means: all geometry edits in order, then one adjustment pass.
-  Any number of adjustment sessions costs one filter pass, and the geometry result can be cached
-  so live dragging re-renders from the cache rather than from the original.
-
-  *Expected to bite:* `CIHighlightShadowAdjust` has `inputRadius` defaulting to 0, which may make
-  it a no-op and needs checking against a real photo; strong exposure moves will band unless the
-  `CIContext` works in a linear colour space; and performance needs measuring on a real 24 MP
-  file before any optimisation is added.
-
 - RAW development via `CIRAWFilter(imageURL:)`, exposing exposure, boost and neutral
   temperature/tint rendered from sensor data.
-  Distinct from the adjustments above, which act on the already-demosaiced 8-bit rendering that
-  `NSImage` hands back, so they cannot recover highlights the way darktable or DxO do.
+  Distinct from the shipped adjustments, which act on the already-demosaiced 8-bit rendering
+  that `NSImage` hands back, so they cannot recover highlights the way darktable or DxO do.
+- White balance, curves, and per-channel colour, once the adjustment pipeline has earned it.
 - Drag an image out of the window to another app.
 - Resize and scale an image to given dimensions.
 - Straighten with a visible grid overlay.
@@ -107,6 +79,17 @@ None currently open.
 - Rotate left, right and 180°, fine-angle rotation, and flip horizontally or vertically — v0.9.0
 - Unsaved-edit protection: confirmation before edits are discarded, including on quit — v0.11.0
 - Multi-step undo and redo (⌘Z / ⇧⌘Z), with the menu naming each step — v0.14.0
+- Image adjustments in an Adjust inspector pane: exposure, highlights, shadows, contrast,
+  saturation, vibrance and hue, with Reset — unreleased
+
+  Built as planned. One `ImageEdit.adjust` holds all seven values, so a drag is one undo step,
+  and only the last adjustment applies during replay, keeping any history to one filter pass.
+  Rendered through Core Image in a linear colour space.
+
+  Two planning assumptions turned out not to hold, both checked rather than assumed:
+  `CIHighlightShadowAdjust` works fine at its default `inputRadius` of 0 (shadows 16 → 47 on a
+  gradient), and the five-pass pipeline runs in about 12 ms at 24 MP, so the proxy rendering and
+  geometry caching held in reserve were not needed.
 
 ## Files and browsing
 

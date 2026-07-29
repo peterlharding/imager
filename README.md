@@ -72,11 +72,15 @@ recent files or settings.
 
 ### Image information
 
-The info inspector (**⌘I**) shows the file's name and location, pixel dimensions, colour model, bit
-depth and profile, and any camera, EXIF and GPS metadata the file carries.
+The inspector (**⌘I**) has two panes, switched by a segmented control at the top.
+
+**Info** shows the file's name and location, pixel dimensions, colour model, bit depth and
+profile, and any camera, EXIF and GPS metadata the file carries.
 
 After an edit it switches to describing the image actually on screen rather than the source file's
 metadata, and tells you whether those edits have been saved yet.
+
+**Adjust** holds the tone and colour sliders described under Editing below.
 
 ### Editing
 
@@ -84,6 +88,9 @@ metadata, and tells you whether those edits have been saved yet.
   The selection can be moved and resized before you commit it.
 - **Rotate** left, right, or 180°, plus a fine-rotation stepper for small-angle straightening.
 - **Flip** horizontally or vertically.
+- **Adjust** tone and colour from the inspector's Adjust pane: exposure, highlights, shadows,
+  contrast, saturation, vibrance and hue, with a Reset button.
+  The image updates as you drag, and the whole drag counts as one undo step.
 - **Undo** and **Redo** (**⌘Z** / **⇧⌘Z**) step back and forth through the edits one at a time.
   The menu names the step, so you can see whether you are about to undo a crop or a rotation.
 - **Revert to Original** discards the whole history at once and returns to the file as it was

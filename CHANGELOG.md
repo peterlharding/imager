@@ -9,7 +9,16 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
-## [0.17.0] - 2026-07-29
+### Added
+
+- Image adjustments: exposure, highlights, shadows, contrast, saturation, vibrance and hue, in
+  an Adjust pane in the inspector alongside Image Info, with a Reset button. The image updates
+  live as a slider is dragged, and the whole drag is a single undo step.
+
+### Changed
+
+- The inspector now has Info and Adjust panes, switched by a segmented control, rather than
+  showing image metadata alone.
 
 See [release_notes/0.17.0.md](release_notes/0.17.0.md) for details.
 

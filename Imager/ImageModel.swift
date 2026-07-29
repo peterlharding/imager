@@ -324,6 +324,38 @@ final class ImageModel {
         updateInfo()
     }
 
+    // MARK: - Adjustments
+
+    /// The adjustment currently in force, or neutral when there is none.
+    var adjustments: Adjustments {
+        for edit in edits.reversed() {
+            if case .adjust(let value) = edit { return value }
+        }
+        return .neutral
+    }
+
+    /// Applies tonal and colour adjustments.
+    ///
+    /// `continuingSession` replaces the trailing adjustment instead of adding another,
+    /// which is what a slider drag wants: one undo step for the drag rather than one
+    /// per tick. The first change of a drag passes false, the rest pass true.
+    func setAdjustments(_ value: Adjustments, continuingSession: Bool = false) {
+        guard image != nil else { return }
+
+        if continuingSession, edits.last?.isAdjustment == true {
+            edits.removeLast()
+        }
+        redoStack.removeAll()
+
+        // A neutral adjustment is only worth recording when there is an earlier one for
+        // it to cancel - that is what Reset does. Otherwise it would be an edit that
+        // changes nothing.
+        if !value.isNeutral || edits.contains(where: \.isAdjustment) {
+            edits.append(.adjust(value))
+        }
+        rebuildImage()
+    }
+
     /// Takes back the most recent edit.
     func undo() {
         guard let last = edits.popLast() else { return }
