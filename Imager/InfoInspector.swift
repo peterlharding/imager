@@ -66,10 +66,20 @@ struct SidebarVisibilityKey: FocusedValueKey {
     typealias Value = Binding<Bool>
 }
 
+/// Lets the Save Recipe menu command raise the naming sheet, which only a view can present.
+struct SaveRecipeSheetKey: FocusedValueKey {
+    typealias Value = Binding<Bool>
+}
+
 extension FocusedValues {
     var inspectorVisible: Binding<Bool>? {
         get { self[InspectorVisibilityKey.self] }
         set { self[InspectorVisibilityKey.self] = newValue }
+    }
+
+    var saveRecipeSheetVisible: Binding<Bool>? {
+        get { self[SaveRecipeSheetKey.self] }
+        set { self[SaveRecipeSheetKey.self] = newValue }
     }
 
     var sidebarVisible: Binding<Bool>? {

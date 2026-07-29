@@ -6,7 +6,7 @@ import CoreImage
 /// One value holds every slider rather than one edit per slider, so a drag records a
 /// single undo step. Values are absolute, which is what lets a later adjustment
 /// supersede an earlier one during replay.
-struct Adjustments: Equatable {
+struct Adjustments: Equatable, Codable {
     /// Stops of exposure. 0 leaves the image alone.
     var exposure: Double = 0
 
@@ -42,6 +42,44 @@ struct Adjustments: Equatable {
     static let saturationRange = 0.0...2.0
     static let vibranceRange = -1.0...1.0
     static let hueRange = -180.0...180.0
+
+    /// Spelled out because declaring `init(from:)` below suppresses the memberwise
+    /// initialiser Swift would otherwise synthesise. The defaults are the neutral values,
+    /// and `neutralValuesAreTheDefaults` in the tests guards them against drifting apart
+    /// from the property defaults above.
+    init(
+        exposure: Double = 0,
+        highlights: Double = 1,
+        shadows: Double = 0,
+        contrast: Double = 1,
+        saturation: Double = 1,
+        vibrance: Double = 0,
+        hue: Double = 0
+    ) {
+        self.exposure = exposure
+        self.highlights = highlights
+        self.shadows = shadows
+        self.contrast = contrast
+        self.saturation = saturation
+        self.vibrance = vibrance
+        self.hue = hue
+    }
+
+    /// Decodes tolerantly, defaulting anything absent to neutral.
+    ///
+    /// Without this, adding a slider would make every recipe saved before it fail to
+    /// load. With it, an older recipe simply has the new adjustment at neutral.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let neutral = Adjustments.neutral
+        exposure = try container.decodeIfPresent(Double.self, forKey: .exposure) ?? neutral.exposure
+        highlights = try container.decodeIfPresent(Double.self, forKey: .highlights) ?? neutral.highlights
+        shadows = try container.decodeIfPresent(Double.self, forKey: .shadows) ?? neutral.shadows
+        contrast = try container.decodeIfPresent(Double.self, forKey: .contrast) ?? neutral.contrast
+        saturation = try container.decodeIfPresent(Double.self, forKey: .saturation) ?? neutral.saturation
+        vibrance = try container.decodeIfPresent(Double.self, forKey: .vibrance) ?? neutral.vibrance
+        hue = try container.decodeIfPresent(Double.self, forKey: .hue) ?? neutral.hue
+    }
 }
 
 /// Renders `Adjustments` onto an image with Core Image.

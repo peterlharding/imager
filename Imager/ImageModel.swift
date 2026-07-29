@@ -16,9 +16,20 @@ final class ImageModel {
     /// Edits applied to `originalImage`, oldest first. Replaying these produces `image`.
     private(set) var edits: [ImageEdit] = []
 
-    /// Edits taken off `edits` by undo, newest first, waiting to be redone.
-    /// Cleared as soon as a fresh edit is made, as usual for an undo history.
-    private(set) var redoStack: [ImageEdit] = []
+    /// Undo and redo hold whole snapshots of the edit list rather than individual edits.
+    ///
+    /// An `[ImageEdit]` is a handful of numbers, so snapshots cost nothing, and it is the
+    /// only model that copes with an action that rewrites the list rather than appending
+    /// to it - applying a recipe replaces the orientation and adjustments, so popping a
+    /// single edit could not put back what it displaced.
+    /// Each entry carries the name of the action that moved away from it, for the menu.
+    private struct HistoryEntry {
+        let edits: [ImageEdit]
+        let actionName: String
+    }
+
+    private var undoStack: [HistoryEntry] = []
+    private var redoStack: [HistoryEntry] = []
 
     /// The edit history as of the last save or load, so "unsaved" survives undo and redo.
     ///
@@ -30,11 +41,11 @@ final class ImageModel {
     /// True when the working image differs from the original (an edit can be undone).
     var canRevert: Bool { !edits.isEmpty }
 
-    var canUndo: Bool { !edits.isEmpty }
+    var canUndo: Bool { !undoStack.isEmpty }
     var canRedo: Bool { !redoStack.isEmpty }
 
     /// Names for the Undo/Redo menu items, e.g. "Undo Rotate".
-    var undoActionName: String? { edits.last?.actionName }
+    var undoActionName: String? { undoStack.last?.actionName }
     var redoActionName: String? { redoStack.last?.actionName }
 
     /// True when the edit history differs from the last saved state.
@@ -149,8 +160,7 @@ final class ImageModel {
         url = nil
         info = nil
         errorMessage = nil
-        edits.removeAll()
-        redoStack.removeAll()
+        clearHistory()
         savedEdits = []
         releaseFileAccess()
         clearFolder()
@@ -249,8 +259,7 @@ final class ImageModel {
         self.originalImage = image
         self.url = url
         self.errorMessage = nil
-        self.edits.removeAll()
-        self.redoStack.removeAll()
+        clearHistory()
         self.savedEdits = []
         updateInfo()
         if record { recents.record(url) }
@@ -326,10 +335,24 @@ final class ImageModel {
     /// An edit that cannot be carried out is not recorded.
     private func apply(_ edit: ImageEdit) {
         guard let current = image, let result = edit.apply(to: current) else { return }
+        recordForUndo(edit.actionName)
         image = result
         edits.append(edit)
-        redoStack.removeAll()
         updateInfo()
+    }
+
+    /// Snapshots the current history so `undo()` can come back to it, and drops any redo
+    /// history, since the timeline has branched.
+    private func recordForUndo(_ actionName: String) {
+        undoStack.append(HistoryEntry(edits: edits, actionName: actionName))
+        redoStack.removeAll()
+    }
+
+    /// Discards the edit history entirely, for when a different image takes over.
+    private func clearHistory() {
+        edits.removeAll()
+        undoStack.removeAll()
+        redoStack.removeAll()
     }
 
     // MARK: - Trash
@@ -390,9 +413,11 @@ final class ImageModel {
         guard image != nil else { return }
 
         if continuingSession, edits.last?.isAdjustment == true {
+            // Mid-drag: fold into the step this drag already started.
             edits.removeLast()
+        } else {
+            recordForUndo("Adjust")
         }
-        redoStack.removeAll()
 
         // A neutral adjustment is only worth recording when there is an earlier one for
         // it to cancel - that is what Reset does. Otherwise it would be an edit that
@@ -403,27 +428,50 @@ final class ImageModel {
         rebuildImage()
     }
 
-    /// Takes back the most recent edit.
+    /// Takes back the most recent action.
     func undo() {
-        guard let last = edits.popLast() else { return }
-        redoStack.append(last)
+        guard let entry = undoStack.popLast() else { return }
+        redoStack.append(HistoryEntry(edits: edits, actionName: entry.actionName))
+        edits = entry.edits
         rebuildImage()
     }
 
-    /// Re-applies the most recently undone edit.
+    /// Re-applies the most recently undone action.
     func redo() {
-        guard let next = redoStack.popLast() else { return }
-        edits.append(next)
+        guard let entry = redoStack.popLast() else { return }
+        undoStack.append(HistoryEntry(edits: edits, actionName: entry.actionName))
+        edits = entry.edits
         rebuildImage()
     }
 
     /// Restores the image as originally loaded, discarding the whole history.
     func revert() {
         guard originalImage != nil else { return }
-        edits.removeAll()
-        redoStack.removeAll()
+        clearHistory()
         // A pasted image still has no file behind it, so reverting leaves it unsaved.
         savedEdits = url == nil ? nil : []
+        rebuildImage()
+    }
+
+    // MARK: - Recipes
+
+    /// Edits worth saving as a recipe: everything except crops, which are in pixel
+    /// coordinates of one particular image and cannot transfer to another.
+    var recipeEdits: [ImageEdit] { edits.filter { !$0.isCrop } }
+
+    var canSaveRecipe: Bool { !recipeEdits.isEmpty }
+
+    /// Applies a saved recipe, replacing the orientation and adjustments while leaving
+    /// any crop alone.
+    ///
+    /// Replacing rather than appending means the result is the same whatever had already
+    /// been done to the image: a recipe holding "rotate 90" gives a 90° rotation rather
+    /// than compounding with a rotation already made. It is one undo step because undo
+    /// restores the whole history snapshot.
+    func applyRecipe(_ recipe: Recipe) {
+        guard image != nil else { return }
+        recordForUndo("Apply “\(recipe.name)”")
+        edits = edits.filter { $0.isCrop } + recipe.edits
         rebuildImage()
     }
 
@@ -461,8 +509,7 @@ final class ImageModel {
         originalImage = pasted
         url = nil
         errorMessage = nil
-        edits.removeAll()
-        redoStack.removeAll()
+        clearHistory()
         savedEdits = nil
         updateInfo()
     }

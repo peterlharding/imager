@@ -64,6 +64,7 @@ struct ImagerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var model: ImageModel
     @State private var slideshow: Slideshow
+    @State private var recipes = RecipeStore()
 
     init() {
         // The model and the Open Recent menu share one store.
@@ -78,9 +79,10 @@ struct ImagerApp: App {
             ContentView()
                 .environment(model)
                 .environment(slideshow)
+                .environment(recipes)
         }
         .commands {
-            AppCommands(model: model, slideshow: slideshow)
+            AppCommands(model: model, slideshow: slideshow, recipes: recipes)
         }
 
         Window("About \(AboutView.appName)", id: "about") {
@@ -102,7 +104,9 @@ struct ImagerApp: App {
 private struct AppCommands: Commands {
     let model: ImageModel
     let slideshow: Slideshow
+    let recipes: RecipeStore
     @Environment(\.openWindow) private var openWindow
+    @FocusedValue(\.saveRecipeSheetVisible) private var saveRecipeSheetVisible
 
     /// Menu bindings onto the model. `model` is a plain reference here rather than
     /// `@Bindable`, so the bindings are made by hand.
@@ -378,6 +382,26 @@ private struct AppCommands: Commands {
 
             Button("Revert to Original") { model.revert() }
                 .disabled(!model.canRevert)
+
+            Divider()
+
+            Button("Save Recipe…") { saveRecipeSheetVisible?.wrappedValue = true }
+                .disabled(saveRecipeSheetVisible == nil || !model.canSaveRecipe)
+
+            Menu("Apply Recipe") {
+                ForEach(recipes.recipes) { recipe in
+                    Button(recipe.name) { model.applyRecipe(recipe) }
+                        .disabled(model.image == nil)
+                }
+            }
+            .disabled(recipes.recipes.isEmpty || model.image == nil)
+
+            Menu("Delete Recipe") {
+                ForEach(recipes.recipes) { recipe in
+                    Button(recipe.name) { recipes.delete(recipe) }
+                }
+            }
+            .disabled(recipes.recipes.isEmpty)
         }
     }
 

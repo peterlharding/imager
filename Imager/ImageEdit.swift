@@ -6,7 +6,7 @@ import CoreGraphics
 /// Edits are recorded rather than snapshotted: undo replays the surviving edits onto
 /// the image as originally loaded, so a history step costs a few numbers instead of a
 /// full-size copy of the image.
-enum ImageEdit: Equatable {
+enum ImageEdit: Equatable, Codable {
     case crop(CGRect)
     case rotate(degreesClockwise: Double)
     case flip(horizontal: Bool)
@@ -15,6 +15,13 @@ enum ImageEdit: Equatable {
     /// True for a tonal or colour adjustment, as opposed to a geometry change.
     var isAdjustment: Bool {
         if case .adjust = self { return true }
+        return false
+    }
+
+    /// True for a crop, which is in pixel coordinates of one particular image and so
+    /// cannot be carried across to another in a recipe.
+    var isCrop: Bool {
+        if case .crop = self { return true }
         return false
     }
 

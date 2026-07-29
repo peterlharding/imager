@@ -4,8 +4,10 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @Environment(ImageModel.self) private var model
     @Environment(Slideshow.self) private var slideshow
+    @Environment(RecipeStore.self) private var recipes
     @Environment(\.openWindow) private var openWindow
     @State private var showInfo = false
+    @State private var showSaveRecipe = false
     @State private var showSidebar = false
     @State private var showRotate = false
     @State private var zoom = ZoomController()
@@ -33,6 +35,12 @@ struct ContentView: View {
                 .inspectorColumnWidth(min: 240, ideal: 300, max: 420)
         }
         .focusedSceneValue(\.inspectorVisible, $showInfo)
+        .focusedSceneValue(\.saveRecipeSheetVisible, $showSaveRecipe)
+        .sheet(isPresented: $showSaveRecipe) {
+            SaveRecipeSheet(existingNames: recipes.recipes.map(\.name)) { name in
+                recipes.save(name: name, edits: model.recipeEdits)
+            }
+        }
         .focusedSceneValue(\.sidebarVisible, $showSidebar)
         .focusedSceneValue(\.zoomController, zoom)
         .onAppear { model.setWindowOpener { openWindow(id: "main") } }

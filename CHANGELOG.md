@@ -9,6 +9,20 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+### Added
+
+- Edit recipes: Image ▸ Save Recipe… stores the rotation, flips and adjustments made to an image
+  under a name, and Image ▸ Apply Recipe puts them onto another. Image ▸ Delete Recipe removes
+  one. Applying replaces the orientation and adjustments rather than compounding with them, so
+  the result does not depend on what was already done, and it is a single undo step. Crops are
+  left out, since a crop is in the pixel coordinates of one particular image.
+
+### Changed
+
+- Undo and redo now hold snapshots of the edit history rather than individual edits. This is what
+  lets applying a recipe be one undo step even though it rewrites the history, and an edit list is
+  a handful of numbers so the snapshots cost nothing.
+
 ## [0.19.0] - 2026-07-30
 
 See [release_notes/0.19.0.md](release_notes/0.19.0.md) for details.

@@ -18,10 +18,14 @@ all carry features.
 - Move to Trash while browsing a folder.
 - Name the fallback format in the Save As menu item. *(The only actual fix in the plan.)*
 
-## v0.20.0 — edit recipes
+## v0.20.0 — edit recipes — **done, unreleased**
 
 Save the changes made to an image under a name, and apply them to another image.
-Planned in detail, ready to build.
+Built as planned, with one thing the plan had not accounted for: making applying a recipe a single
+undo step meant moving undo and redo from popping individual edits to holding snapshots of the
+whole edit list, since an action that *rewrites* the history cannot be undone by removing one
+entry. An `[ImageEdit]` is a handful of numbers, so the snapshots cost nothing, and all 141
+existing tests passed against the new model unchanged.
 
 **The simplification that shapes it.** A recipe looks like an editable list of steps, but the
 existing semantics collapse it: only the last `.adjust` applies, so a recipe's tonal content is
@@ -84,11 +88,9 @@ banding.
 - Drag an image out of the window to another app.
 - Resize and scale an image to given dimensions.
 - Straighten with a visible grid overlay.
-- Edit recipes: record the sequence of changes made to an image, let it be edited, save it, and
-  apply it to a whole folder.
-  The `ImageEdit` history added in v0.14.0 is already this, minus persistence: making it
-  `Codable` gives saved recipes, and applying one to a folder is then a loop.
-  New adjustments should be added as `ImageEdit` cases so they join undo and recipes for free.
+- Normalised crops in recipes, stored as 0-1 fractions so a crop can transfer between images of
+  different sizes. Excluded from v0.20.0 deliberately; see the Plan entry.
+- New adjustments should be added as `ImageEdit` cases so they join undo and recipes for free.
 
 ## Files and browsing
 
@@ -167,6 +169,13 @@ None currently open.
   formats. The banding comes from the source being 8-bit, and output precision cannot invent
   levels the file never had. The only real fix is a higher bit depth source, which is the RAW
   development item in ToDo.
+- Edit recipes: save the rotation, flips and adjustments under a name and apply them to another
+  image, from the Image menu — unreleased
+
+  One JSON file per recipe in Application Support, versioned, decoded tolerantly so a recipe
+  saved today still loads once more adjustments exist. Applying replaces orientation and
+  adjustments and keeps crops, which makes the result independent of what was already done and
+  gives a single undo step. Crops are excluded from recipes.
 
 ## Files and browsing
 

@@ -99,6 +99,12 @@ metadata, and tells you whether those edits have been saved yet.
   The menu names the step, so you can see whether you are about to undo a crop or a rotation.
 - **Revert to Original** discards the whole history at once and returns to the file as it was
   loaded.
+- **Save Recipe…** stores the rotation, flips and adjustments under a name, and **Apply Recipe**
+  puts them onto another image.
+  Applying replaces the orientation and adjustments rather than adding to them, so the result is
+  the same whatever you had already done, and it counts as a single undo step.
+  Crops are left out of a recipe: a crop belongs to one image's dimensions, and in practice it is
+  tone you want to reuse rather than composition.
 
 Edits are recorded as a list of operations replayed from the original image rather than as saved
 copies of it, so a long history costs almost nothing in memory.
