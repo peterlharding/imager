@@ -91,6 +91,13 @@ final class ZoomScrollView: NSScrollView {
     private let imageView = ZoomImageView()
     private var pendingFit = false
 
+    /// True while the magnification is one this view chose to fit the viewport, rather
+    /// than one the user asked for. Only a fitted image re-fits when the viewport changes.
+    private var isFittedToWindow = true
+
+    /// Viewport size at the last layout, to detect a genuine resize.
+    private var lastViewportSize: NSSize = .zero
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setup()
@@ -149,8 +156,22 @@ final class ZoomScrollView: NSScrollView {
 
     override func layout() {
         super.layout()
-        if pendingFit, bounds.width > 0, bounds.height > 0 {
+        guard bounds.width > 0, bounds.height > 0 else { return }
+
+        if pendingFit {
             performFit()
+            lastViewportSize = bounds.size
+            return
+        }
+
+        // The viewport changed size: the window was resized, or a slideshow dropped
+        // out of full screen. A magnification chosen for the old viewport leaves the
+        // image overflowing and parked off to one side, so fit it again - but only if
+        // it was fitted, otherwise a zoom the user chose would be thrown away.
+        guard bounds.size != lastViewportSize else { return }
+        lastViewportSize = bounds.size
+        if isFittedToWindow {
+            zoomToFit()
         }
     }
 
@@ -167,9 +188,12 @@ final class ZoomScrollView: NSScrollView {
         guard bounds.width > 0, bounds.height > 0 else { pendingFit = true; return }
         let fit = min(bounds.width / doc.bounds.width, bounds.height / doc.bounds.height)
         setZoom(min(fit, 1.0))
+        // Set after setZoom, which clears it for any explicitly requested zoom.
+        isFittedToWindow = true
     }
 
     func setZoom(_ target: CGFloat, centeredAt point: NSPoint? = nil) {
+        isFittedToWindow = false
         let clamped = min(max(target, minMagnification), maxMagnification)
         let center = point ?? NSPoint(x: contentView.bounds.midX, y: contentView.bounds.midY)
         setMagnification(clamped, centeredAt: center)

@@ -17,6 +17,12 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
   option to reverse. Name order is natural, so `photo2` sorts before `photo10`. Re-sorting keeps
   the image on screen selected, and the choice is remembered between launches.
 
+### Fixed
+
+- The image is no longer left oversized and off-centre after a slideshow leaves full screen. A
+  fitted image now re-fits whenever the viewport changes size, including any window resize. A
+  zoom level you chose yourself is still preserved across a resize.
+
 ### Changed
 
 - Edits are now recorded as a replayable list of operations rather than mutating the displayed
