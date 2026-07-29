@@ -39,6 +39,9 @@ The `CURRENT_PROJECT_VERSION` build setting is the build number and can be bumpe
    - Add a `See [release_notes/<version>.md](release_notes/<version>.md) for details.` line under the new heading.
    - Update the link references at the bottom of the file: point `[Unreleased]` at `compare/v<version>...HEAD` and add a `[<version>]` tag link.
 
+   Also update `FEATURES.md`: move anything this release ships from ToDo to Done, and stamp each
+   with `— v<version>`, replacing the `unreleased` marker used while it was waiting.
+
 4. **Write the release notes** at `release_notes/<version>.md`.
    Use the existing files as a template: a short intro, Highlights, any Fixed section, and Under the hood.
 
