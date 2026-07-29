@@ -78,6 +78,58 @@ The `CURRENT_PROJECT_VERSION` build setting is the build number and can be bumpe
    gh release create v<version> --title "Imager <version>" --notes-file release_notes/<version>.md
    ```
 
+   GitHub marks whichever release was *created* most recently as "Latest", regardless of version
+   order, so backfilling an older version steals the badge.
+   Put it back with `gh release edit v<version> --latest`.
+
+10. **(Optional) Attach a signed, notarised build** to that release.
+
+    This needs a Developer ID Application certificate in the login keychain, and notarisation
+    credentials stored once as a keychain profile:
+
+    ```sh
+    xcrun notarytool store-credentials "imager-notary" --apple-id <apple-id> --team-id T5RDMAD9Q4
+    ```
+
+    Then:
+
+    ```sh
+    # Build a Release archive.
+    xcodebuild archive -project Imager.xcodeproj -scheme Imager -configuration Release \
+      -destination 'platform=macOS' -archivePath build/Imager.xcarchive
+
+    # Export it. This step is what re-signs with Developer ID; see ExportOptions.plist.
+    xcodebuild -exportArchive -archivePath build/Imager.xcarchive \
+      -exportOptionsPlist ExportOptions.plist -exportPath build/export
+
+    # Zip with ditto rather than zip, so symlinks and signing metadata survive.
+    ditto -c -k --sequesterRsrc --keepParent build/export/Imager.app build/Imager-<version>.zip
+
+    # Notarise, and wait for the verdict.
+    xcrun notarytool submit build/Imager-<version>.zip --keychain-profile "imager-notary" --wait
+
+    # Staple the ticket, then re-zip. The ticket attaches to the .app, so the zip
+    # made above does not contain it.
+    xcrun stapler staple build/export/Imager.app
+    rm build/Imager-<version>.zip
+    ditto -c -k --sequesterRsrc --keepParent build/export/Imager.app build/Imager-<version>.zip
+
+    gh release upload v<version> build/Imager-<version>.zip
+    ```
+
+    **Verify before uploading.** Extract the zip somewhere and confirm what a downloader will see:
+
+    ```sh
+    xcrun stapler validate <extracted>/Imager.app
+    spctl --assess --type execute --verbose=2 <extracted>/Imager.app
+    ```
+
+    Expect `accepted` and `source=Notarized Developer ID`.
+    Also confirm with `codesign -dv --verbose=4` that the authority reads
+    `Developer ID Application`, not `Apple Development`.
+    A development-signed app will not launch on anyone else's Mac, and the archive step signs with
+    the development certificate until export replaces it.
+
 ## Commit conventions
 
 Use a short prefix on commit messages so history is easy to scan.
@@ -85,6 +137,8 @@ Use a short prefix on commit messages so history is easy to scan.
 - `Release <version>` for the single commit that cuts a release (step 6 above).
 - `feat: <summary>` for a new feature, `fix: <summary>` for a bug fix.
 - `docs: <summary>` for documentation and process changes that are not part of a release.
+- `test: <summary>` for test-only changes.
+- `build: <summary>` for build, signing, and packaging configuration.
 
 Documentation or process changes (this file, README, the Xcode Documentation group) are committed
 on their own with a `docs:` message rather than being folded into a release commit. For example:
@@ -99,3 +153,4 @@ git commit -m "docs: add release process"
 - The repo-level docs (`CHANGELOG.md`, `RELEASING.md`, `README.md`, `LICENSE`, `release_notes/`) live at the repo root, outside the Xcode-synchronized `Imager/` source group. They are visible in Xcode under the `Documentation` group but are not compiled into the app.
 - Tags are annotated (`git tag -a`) so they carry a message and tagger, and can be verified and listed with release metadata.
 - Keep one commit per release (`Release <version>`) going forward so each tag anchors to a distinct, accurate point in history.
+- Release artifacts are built into `build/`, which is gitignored along with `*.xcarchive`. Nothing produced by step 10 is committed; the release asset on GitHub is the only published copy.
