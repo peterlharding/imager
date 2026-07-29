@@ -20,13 +20,50 @@ all carry features.
 
 ## v0.20.0 — edit recipes
 
-Save the sequence of changes made to an image, edit it, and re-apply it.
-Half-built already: `ImageEdit` is the recorded workflow, so this is persistence plus a UI.
+Save the changes made to an image under a name, and apply them to another image.
+Planned in detail, ready to build.
+
+**The simplification that shapes it.** A recipe looks like an editable list of steps, but the
+existing semantics collapse it: only the last `.adjust` applies, so a recipe's tonal content is
+exactly one `Adjustments` value, and rotate/flip compose into one of eight orientations.
+A recipe is therefore **orientation + adjustments**, which is why there is no step-editor UI —
+editing a recipe's tone is what the Adjust pane already does.
+The general edit list is still what gets *stored*, since that costs nothing and leaves room for
+resize and straighten later.
+
+**Crop is excluded.** A crop rect is in pixel coordinates of one particular image, so it cannot
+transfer meaningfully to a photo of another size, and in practice you batch tone rather than
+composition. Applying a recipe therefore leaves any crop alone.
+Normalised 0-1 crops would work and could be added later; they were rejected for v0.20.0 because
+they change existing crop semantics for little gain.
+
+**Applying a recipe replaces orientation and adjustments, and keeps crops.** Predictable whatever
+was already done to the image, and it falls out as a single undo step, which appending every edit
+would not.
+
+**Storage.** One JSON file per recipe under Application Support inside the sandbox container,
+which needs no user interaction to write. Files rather than `UserDefaults` so recipes can later be
+exported or shared. Each file carries a format version.
+
+`Codable` synthesis was checked before planning around it: Swift generates it for `ImageEdit` with
+readable JSON, and a custom `init(from:)` on `Adjustments` that defaults missing values to neutral
+means a recipe saved today still loads once new sliders exist.
+
+Build order: `Codable` on `ImageEdit` and `Adjustments` → `Recipe` (name, version, edits, date) →
+`RecipeStore` (list/save/delete, directory injected so tests use a temp folder) →
+`ImageModel.applyRecipe(_:)` → Image menu: Save Recipe… with a name sheet, Apply Recipe ▸ list,
+Delete Recipe ▸ list.
+
+Watch for: recipe names becoming filenames, so they need sanitising or an index; and applying a
+recipe to an image of a very different aspect ratio, where the orientation may not be what was
+wanted.
 
 ## v0.21.0 — batch processing
 
 Apply a recipe, or a format conversion, across a whole folder.
 **Depends on v0.20.0** — a batch is a recipe applied many times, so recipes have to exist first.
+Neither `RecipeStore` nor `[ImageEdit].applied(to:)` needs any UI, so the batch itself really is a
+loop; the work is the destination folder, a naming rule, progress, and cancellation.
 
 ## v0.22.0 — RAW development
 
