@@ -249,6 +249,10 @@ private struct AppCommands: Commands {
                 Button("Other…") {
                     if let app = ExternalEditor.chooseApplication() { editWith(app) }
                 }
+                // Disabled on the item as well as the menu: SwiftUI does not reliably
+                // grey out a Menu inside a command group, which would leave an enabled
+                // "Edit With ▸ Other…" with no file to hand over.
+                .disabled(model.url == nil)
             }
             .disabled(model.url == nil)
         }
