@@ -7,9 +7,36 @@ import UniformTypeIdentifiers
 final class AppDelegate: NSObject, NSApplicationDelegate {
     static weak var sharedModel: ImageModel?
 
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Serves the "Open in Imager" entry declared under NSServices in Info.plist.
+        NSApp.servicesProvider = self
+        // Services are cached by the system; ask it to re-read ours.
+        NSUpdateDynamicServices()
+    }
+
     func application(_ application: NSApplication, open urls: [URL]) {
         guard let url = urls.first else { return }
         AppDelegate.sharedModel?.open(url)
+    }
+
+    /// Handles the "Open in Imager" service. The selector name must match the
+    /// `NSMessage` value in Info.plist, and the signature is fixed by AppKit.
+    @objc func openInImager(
+        _ pasteboard: NSPasteboard,
+        userData: String?,
+        error: AutoreleasingUnsafeMutablePointer<NSString>
+    ) {
+        guard let url = Self.fileURL(from: pasteboard) else {
+            error.pointee = "No file or folder was provided." as NSString
+            return
+        }
+        AppDelegate.sharedModel?.open(url)
+    }
+
+    /// The first file URL on a pasteboard, which is what a Finder service delivers.
+    static func fileURL(from pasteboard: NSPasteboard) -> URL? {
+        let options: [NSPasteboard.ReadingOptionKey: Any] = [.urlReadingFileURLsOnly: true]
+        return (pasteboard.readObjects(forClasses: [NSURL.self], options: options) as? [URL])?.first
     }
 
     // A `Window` scene quits the app when its window closes; keep running so a

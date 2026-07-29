@@ -29,5 +29,30 @@
 			</array>
 		</dict>
 	</array>
+	<!-- Finder shows no "Open With" submenu for folders, whatever an app declares,
+	     so a right-click entry has to come from a Service. Appears under
+	     right-click ▸ Services, and can be promoted to the top level in
+	     System Settings ▸ Keyboard ▸ Shortcuts ▸ Services. -->
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Open in Imager</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>openInImager</string>
+			<key>NSPortName</key>
+			<string>Imager</string>
+			<!-- No NSRequiredContext: NSTextContent constrains on a *text* selection,
+			     which a Finder file selection is not, and would suppress the item. -->
+			<key>NSSendFileTypes</key>
+			<array>
+				<string>public.image</string>
+				<string>public.folder</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

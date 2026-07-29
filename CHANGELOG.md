@@ -9,6 +9,13 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+### Added
+
+- "Open in Imager" Finder service for images and folders, under right-click ▸ Services. Finder
+  offers no "Open With" submenu for folders whatever an app declares, so a service is the only
+  way to get a right-click entry for them. It can be given a keyboard shortcut in System
+  Settings ▸ Keyboard ▸ Keyboard Shortcuts ▸ Services.
+
 ## [0.15.0] - 2026-07-29
 
 See [release_notes/0.15.0.md](release_notes/0.15.0.md) for details.

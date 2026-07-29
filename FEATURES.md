@@ -18,9 +18,6 @@ Per-release detail lives in [CHANGELOG.md](CHANGELOG.md) and [`release_notes/`](
 - Name the fallback format in the Save As menu item when the source cannot be written,
   e.g. "Save As PNG…" for a RAW file.
 - Recursive folder browsing, including subfolders.
-- An "Open in Imager" entry when right-clicking a folder in Finder.
-  Finder shows no Open With submenu for folders whatever an app declares, so this needs an
-  `NSServices` entry or a Finder Sync extension rather than a document type.
 
 ## Viewing
 
@@ -59,6 +56,8 @@ None currently open.
 - Copy Image (⌘C) and Paste Image (⌘V), with a pasted image treated as unsaved — v0.15.0
 - Save As falls back to PNG for formats macOS can read but not write, such as camera RAW — v0.15.0
 - Camera RAW support, inherited from ImageIO and confirmed on Nikon NEF — v0.15.0
+- "Open in Imager" Finder service for folders and images, since Finder offers no Open With
+  submenu for folders — unreleased
 
 ## Viewing
 

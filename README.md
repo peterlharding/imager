@@ -132,6 +132,15 @@ Imager registers as a viewer for images and folders, so it appears in Finder's "
 opens double-clicked files, and accepts files or folders dropped onto its icon.
 It registers as an alternate opener, so it will not take over as the default handler for your images.
 
+Finder shows no "Open With" submenu for **folders**, whatever an app declares, so Imager also
+provides an **Open in Imager** service.
+Right-click a folder or an image and look under **Services**.
+To give it a place of its own, or a keyboard shortcut, use
+System Settings ▸ Keyboard ▸ Keyboard Shortcuts ▸ Services.
+
+macOS caches the services list, so a newly built copy may not appear until the app has been
+launched once, or until you log out and back in.
+
 ### Settings
 
 **Settings ▸ General** sets how many recent files to remember, from 1 to 50, and the slideshow's
