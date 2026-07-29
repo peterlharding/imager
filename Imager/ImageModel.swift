@@ -412,19 +412,32 @@ final class ImageModel {
     func setAdjustments(_ value: Adjustments, continuingSession: Bool = false) {
         guard image != nil else { return }
 
-        if continuingSession, edits.last?.isAdjustment == true {
+        // Work out the resulting history first, so a call that changes nothing can be
+        // dropped rather than costing an undo step that appears to do nothing.
+        var updated = edits
+        if continuingSession, updated.last?.isAdjustment == true {
             // Mid-drag: fold into the step this drag already started.
-            edits.removeLast()
-        } else {
-            recordForUndo("Adjust")
+            updated.removeLast()
         }
 
         // A neutral adjustment is only worth recording when there is an earlier one for
         // it to cancel - that is what Reset does. Otherwise it would be an edit that
         // changes nothing.
-        if !value.isNeutral || edits.contains(where: \.isAdjustment) {
-            edits.append(.adjust(value))
+        if !value.isNeutral || updated.contains(where: \.isAdjustment) {
+            updated.append(.adjust(value))
         }
+
+        // Only the start of a session is guarded. Skipping mid-drag would leave later
+        // ticks folding into the previous session's step with no undo entry of their own.
+        if !continuingSession {
+            // A new session appends rather than replaces, so setting the value already in
+            // force would add a second identical adjustment: a different list that renders
+            // the same, and an undo step that appears to do nothing.
+            if case .adjust(let current)? = edits.last, current == value { return }
+            guard updated != edits else { return }
+            recordForUndo("Adjust")
+        }
+        edits = updated
         rebuildImage()
     }
 
@@ -470,8 +483,13 @@ final class ImageModel {
     /// restores the whole history snapshot.
     func applyRecipe(_ recipe: Recipe) {
         guard image != nil else { return }
+        let updated = edits.filter { $0.isCrop } + recipe.edits
+        // Applying a recipe that lands on the history already in force changes nothing, so
+        // it must not record an undo step. Otherwise the first ⌘Z appears to do nothing:
+        // it restores a state identical to the current one, and only the second gets back.
+        guard updated != edits else { return }
         recordForUndo("Apply “\(recipe.name)”")
-        edits = edits.filter { $0.isCrop } + recipe.edits
+        edits = updated
         rebuildImage()
     }
 

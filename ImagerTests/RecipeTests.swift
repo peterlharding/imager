@@ -220,6 +220,65 @@ struct RecipeTests {
         #expect(fixture.model.canUndo == false)
     }
 
+    /// Reported after v0.20.0 was built: rotate by hand, apply a recipe that rotates the
+    /// same way, and ⌘Z had to be pressed twice. The apply landed on a history identical
+    /// to the one already in force, but still recorded an undo step, so the first ⌘Z
+    /// restored a state indistinguishable from the current one.
+    @Test("Applying a recipe that changes nothing costs no undo step")
+    func applyingWithNoEffectIsNotUndoable() throws {
+        let fixture = makeFixture()
+        defer { TestSupport.remove(fixture.directory) }
+        let original = TestSupport.allPixels(try #require(fixture.model.image))
+        fixture.store.save(name: "Quarter turn", edits: [.rotate(degreesClockwise: 90)])
+
+        fixture.model.rotate(byDegreesClockwise: 90)
+        #expect(fixture.model.undoActionName == "Rotate")
+
+        fixture.model.applyRecipe(try #require(fixture.store.recipes.first))
+
+        #expect(fixture.model.undoActionName == "Rotate", "the apply added no step of its own")
+
+        fixture.model.undo()
+
+        #expect(
+            TestSupport.allPixels(try #require(fixture.model.image)) == original,
+            "a single undo returns to the unedited image"
+        )
+        #expect(fixture.model.canUndo == false)
+    }
+
+    @Test("Re-applying the same recipe twice costs one undo step")
+    func reapplyingIsNotUndoableTwice() throws {
+        let fixture = makeFixture()
+        defer { TestSupport.remove(fixture.directory) }
+        let original = TestSupport.allPixels(try #require(fixture.model.image))
+        fixture.store.save(name: "Look", edits: [.adjust(Adjustments(exposure: 1))])
+        let recipe = try #require(fixture.store.recipes.first)
+
+        fixture.model.applyRecipe(recipe)
+        fixture.model.applyRecipe(recipe)
+
+        fixture.model.undo()
+
+        #expect(TestSupport.allPixels(try #require(fixture.model.image)) == original)
+        #expect(fixture.model.canUndo == false)
+    }
+
+    @Test("Setting the adjustments already in force costs no undo step")
+    func settingSameAdjustmentsIsNotUndoable() {
+        let fixture = makeFixture()
+        defer { TestSupport.remove(fixture.directory) }
+
+        fixture.model.setAdjustments(Adjustments(exposure: 1))
+        #expect(fixture.model.undoActionName == "Adjust")
+
+        fixture.model.setAdjustments(Adjustments(exposure: 1))
+
+        fixture.model.undo()
+        #expect(fixture.model.adjustments.isNeutral, "one undo clears the adjustment")
+        #expect(fixture.model.canUndo == false)
+    }
+
     @Test("An applied recipe counts as unsaved work")
     func applyingCountsAsUnsaved() throws {
         let fixture = makeFixture()
