@@ -156,6 +156,19 @@ final class ZoomScrollView: NSScrollView {
 
     override func layout() {
         super.layout()
+        refitForCurrentViewport()
+    }
+
+    /// Resizing does not reliably mark the view as needing layout, so the re-fit is
+    /// driven from the resize itself as well. Entering full screen from a small window
+    /// on a large display is the case that exposed this: the viewport jumps a long way
+    /// and no layout pass follows, leaving the image at the old magnification.
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        refitForCurrentViewport()
+    }
+
+    private func refitForCurrentViewport() {
         guard bounds.width > 0, bounds.height > 0 else { return }
 
         if pendingFit {
@@ -164,10 +177,10 @@ final class ZoomScrollView: NSScrollView {
             return
         }
 
-        // The viewport changed size: the window was resized, or a slideshow dropped
-        // out of full screen. A magnification chosen for the old viewport leaves the
-        // image overflowing and parked off to one side, so fit it again - but only if
-        // it was fitted, otherwise a zoom the user chose would be thrown away.
+        // The viewport changed size: the window was resized, or a slideshow entered or
+        // left full screen. A magnification chosen for the old viewport leaves the image
+        // overflowing and parked off to one side, so fit it again - but only if it was
+        // fitted, otherwise a zoom the user chose would be thrown away.
         guard bounds.size != lastViewportSize else { return }
         lastViewportSize = bounds.size
         if isFittedToWindow {

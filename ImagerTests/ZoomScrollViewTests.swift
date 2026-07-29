@@ -100,6 +100,55 @@ struct ZoomScrollViewTests {
         #expect(abs(view.magnification - 2) < 0.01, "the user's zoom is preserved")
     }
 
+    /// The slideshow sequence: a windowed viewport, then full screen, then slides
+    /// arriving one after another. Every slide should end up fitted.
+    @Test("Each slide is fitted as a slideshow advances in a large viewport")
+    func slideshowSequenceKeepsSlidesFitted() {
+        let slide = { TestSupport.solidImage(width: 1200, height: 800) }
+
+        let view = makeScrollView(width: 640, height: 400)
+        view.setImage(slide())
+        view.layoutSubtreeIfNeeded()
+        #expect(abs(view.magnification - 0.5) < 0.01, "fitted to the window")
+
+        // Entering full screen.
+        view.frame = NSRect(x: 0, y: 0, width: 1728, height: 1117)
+        view.layoutSubtreeIfNeeded()
+        #expect(abs(view.magnification - 1) < 0.01, "fit would be 1.4, but never scales past 100%")
+
+        // Slides advancing.
+        for _ in 0..<3 {
+            view.setImage(slide())
+            view.layoutSubtreeIfNeeded()
+            #expect(abs(view.magnification - 1) < 0.01, "each slide stays fitted")
+        }
+
+        // Leaving full screen.
+        view.frame = NSRect(x: 0, y: 0, width: 640, height: 400)
+        view.layoutSubtreeIfNeeded()
+        #expect(abs(view.magnification - 0.5) < 0.01, "back to fitting the window")
+    }
+
+    /// A window resize does not necessarily mark the view as needing layout, so the
+    /// re-fit cannot depend on a layout pass arriving. Entering full screen from a
+    /// small window on a large display is where this shows: the viewport jumps a long
+    /// way, and the image is left at a magnification chosen for the old size.
+    @Test("Re-fits on a frame change even when no layout pass follows")
+    func refitsOnFrameChangeWithoutLayoutPass() {
+        let view = makeScrollView(width: 800, height: 600)
+        view.setImage(TestSupport.solidImage(width: 2400, height: 1600))
+        view.layoutSubtreeIfNeeded()
+
+        let windowed = view.magnification
+        #expect(abs(windowed - 1.0 / 3.0) < 0.01, "fitted to the small window")
+
+        // Full screen on a wide display, with no explicit layout pass afterwards.
+        view.setFrameSize(NSSize(width: 3840, height: 1560))
+
+        let expected = min(3840.0 / 2400.0, 1560.0 / 1600.0)
+        #expect(abs(view.magnification - expected) < 0.01, "re-fitted to the new viewport")
+    }
+
     @Test("Actual size survives a viewport change")
     func actualSizeIsNotOverridden() {
         let view = makeScrollView(width: 800, height: 600)
