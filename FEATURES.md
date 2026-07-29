@@ -91,6 +91,13 @@ None currently open.
   gradient), and the five-pass pipeline runs in about 12 ms at 24 MP, so the proxy rendering and
   geometry caching held in reserve were not needed.
 
+  **Do not add 16-bit rendering to reduce banding.** It was measured against
+  `data/adjustment-test.png` and makes no difference at all: a +3 EV push leaves the full ramp
+  with 100 distinct levels and a largest jump of 9, identically at `RGBA8` and `RGBAh` working
+  formats. The banding comes from the source being 8-bit, and output precision cannot invent
+  levels the file never had. The only real fix is a higher bit depth source, which is the RAW
+  development item in ToDo.
+
 ## Files and browsing
 
 - Open an image via menu, toolbar, or drag-and-drop — v0.1.0
