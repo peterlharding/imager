@@ -9,17 +9,21 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-07-29
+
+See [release_notes/0.13.0.md](release_notes/0.13.0.md) for details.
+
 ### Added
 
 - Slideshow: run the folder being browsed as a full-screen slideshow from View ▸ Start Slideshow
   (⇧⌘F) or the toolbar. The sidebar and inspector hide while it runs and are restored afterwards,
   the display is kept awake, and leaving full screen ends it. Editing the current image stops the
   show rather than advancing away from unsaved work. Settings ▸ General sets the interval (1-60
-  seconds) and whether it repeats after the last image.
+  seconds) and whether the show repeats or stops after the last image.
 
 - Unit test harness: an `ImagerTests` target built on Swift Testing, with a shared Xcode scheme so
-  `xcodebuild test` works from a fresh clone. Initial suites cover the pixel transforms, the
-  unsaved-edit state machine, the recent-files limit, and the export format table.
+  `xcodebuild test` works from a fresh clone. Suites cover the pixel transforms, the unsaved-edit
+  state machine, the slideshow rules, the recent-files limit, and the export format table.
 
 ## [0.12.0] - 2026-07-28
 
@@ -209,7 +213,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://github.com/peterlharding/imager/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/peterlharding/imager/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/peterlharding/imager/releases/tag/v0.13.0
 [0.12.0]: https://github.com/peterlharding/imager/releases/tag/v0.12.0
 [0.11.0]: https://github.com/peterlharding/imager/releases/tag/v0.11.0
 [0.10.0]: https://github.com/peterlharding/imager/releases/tag/v0.10.0
