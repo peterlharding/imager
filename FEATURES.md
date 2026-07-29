@@ -18,7 +18,7 @@ all carry features.
 - Move to Trash while browsing a folder.
 - Name the fallback format in the Save As menu item. *(The only actual fix in the plan.)*
 
-## v0.20.0 — edit recipes — **done, unreleased**
+## v0.20.0 — edit recipes — **shipped**
 
 Save the changes made to an image under a name, and apply them to another image.
 Built as planned, with one thing the plan had not accounted for: making applying a recipe a single
@@ -176,6 +176,10 @@ None currently open.
   saved today still loads once more adjustments exist. Applying replaces orientation and
   adjustments and keeps crops, which makes the result independent of what was already done and
   gives a single undo step. Crops are excluded from recipes.
+
+  An action that lands on the history already in force records no undo step. Without that, rotating
+  by hand and applying a recipe that rotates the same way needed ⌘Z twice: the first restored a
+  state indistinguishable from the current one. Found by testing the app, with the suite green.
 
 ## Files and browsing
 
