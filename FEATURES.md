@@ -125,15 +125,38 @@ cannot do.
 Noise reduction, detail, sharpness, moire and lens correction are deliberately left for later:
 useful, but refinements rather than RAW-only capabilities.
 
-**Every control must be gated on its `Supported` flag.** `CIRAWFilter` exposes nine of them —
-`highlightRecoverySupported`, `localToneMapSupported`, `sharpnessSupported`,
-`lensCorrectionSupported` and so on — because support varies by camera and decoder. The pane has to
-ask per file and adapt rather than showing a fixed set of sliders. This was found by dumping the
-property list rather than assumed from the documentation.
+**Every control must be gated on its `Supported` flag.** `CIRAWFilter` exposes nine of them, because
+support varies by camera and decoder. Confirmed on `DSC_4927.NEF`: highlight recovery, sharpness,
+detail, contrast, luminance and colour noise reduction and moire reduction are all supported, while
+**local tone map and lens correction are not** — two of nine unavailable on a mainstream Nikon file.
+A fixed set of sliders would therefore show controls that silently do nothing.
+Found by dumping the property list rather than trusting the documentation.
 
-**Performance will need work here, unlike adjustments.** Demosaicing is far heavier than the 12 ms
-colour pipeline, so live sliders will need `draftModeEnabled`, `scaleFactor`, or both — the proxy
-approach held in reserve for v0.18.0 and not needed there. Measure before choosing.
+**Performance: hold the filter instance.** Measured against `data/DSC_4927.NEF`, 7360×4912 (36 MP).
+The plan originally assumed `draftModeEnabled` and `scaleFactor` were the answer. They are not.
+
+| | |
+| --- | --- |
+| New `CIRAWFilter` per render, full size | 366-557 ms |
+| New filter per render, any reduced scale | 86-94 ms — a floor, unchanged from ¼ to ⅛ |
+| `draftModeEnabled` at full size | 230-423 ms, barely better |
+| **One instance reused, ¼ scale** | **first 150 ms, then 7 ms** |
+| One instance reused, full size | ~160 ms every time, never warms up |
+
+The decode is cached *inside a filter instance*, so the whole game is keeping one alive per open
+file. A fresh filter per render — the shape `ImageAdjuster` uses, and the obvious thing to copy —
+costs 86 ms at best and would make live RAW sliders feel impossible.
+
+`scaleFactor` can be switched on a live instance without losing the cache: ¼ → full → ¼ returns to
+6-9 ms. So one instance suffices; no double buffering. Drag at reduced scale for 7 ms a tick, then
+render full size once on release for ~160 ms.
+
+**RAW defaults are not neutral, and differ per file.** This file opens with
+`baselineExposure` 0.3, `boostAmount` 1.0, `boostShadowAmount` 0.9, `neutralTemperature` 3175 K,
+`neutralTint` 1.31, `shadowBias` 3.0 — the decoder's own reading of the shot.
+So `RawSettings` cannot have fixed neutral constants the way `Adjustments` does, and Reset must mean
+"back to what the decoder chose for *this* file" rather than back to zero. Values are stored
+absolutely, which is also what makes them meaningful in a recipe applied to another frame.
 
 **Recipes and batch both carry RAW settings.** Recipes gain optional RAW settings, ignored when
 applied to a non-RAW image. `BatchProcessor` currently opens files with `NSImage(contentsOf:)`, so
