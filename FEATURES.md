@@ -197,11 +197,31 @@ large to commit; RAW extensions are gitignored, so a local copy under `data/` wo
 - Parallel batch processing. Sequential was chosen to keep memory bounded on folders of 24 MP
   files; revisit only if a real batch turns out to be slower than the disk.
 - Recursive folder browsing, including subfolders.
+- **Stacks**, as Aperture had: group a burst or a bracket so the set collapses to a single pick in
+  the sidebar, expanding when you want the rest.
+  A good fit alongside Move to Trash for culling, and Aperture's auto-stacking by capture time is
+  within reach — the EXIF date is already extracted for the info inspector.
+
+  The real question is where stacks live. They are not a property of any file, so they need
+  storing somewhere: alongside the folder, which means writing into a folder Imager otherwise only
+  reads, or in Application Support keyed by folder, which is tidier but is lost if the folder
+  moves. Worth settling before building.
+
+  Also decide how stacks meet what already exists: whether a slideshow shows only picks, whether
+  Process Folder runs on picks or on everything, and whether Move to Trash on a collapsed stack
+  takes the pick or the whole set.
 
 ## Viewing
 
 - Slideshow transitions, and a random order option.
 - Compare two images side by side.
+- **Loupe**, as Aperture had: a draggable magnifier over the image showing a patch at full
+  resolution, rather than zooming the whole view.
+  The point is checking focus or sharpness without leaving fit-to-window, which is where you
+  spend most of your time.
+  `ZoomableImageView` already holds the image at native size, so this is an overlay that samples
+  a region around the cursor and draws it magnified — no change to the zoom machinery.
+  Decisions: whether it follows the cursor or is placed and left, and what magnification it uses.
 
 ## Project
 
