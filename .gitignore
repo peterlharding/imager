@@ -17,6 +17,21 @@ xcuserdata/
 build/
 *.xcarchive
 
+## Camera RAW files, for testing RAW development by hand. Far too large to commit:
+## keep a local copy under data/ and leave it out of the repository.
+*.nef
+*.NEF
+*.nrw
+*.cr2
+*.cr3
+*.crw
+*.arw
+*.dng
+*.orf
+*.raf
+*.rw2
+*.pef
+
 ## Playgrounds
 timeline.xctimeline
 playground.xcworkspace

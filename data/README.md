@@ -31,6 +31,14 @@ Band 2 is **already visibly stepped in the original file**.
 That is what twenty tonal levels across 2400 pixels looks like in 8 bits, not a defect.
 Band 1 is the honest banding test, because it starts smooth.
 
+## Camera RAW
+
+Not in the repository: a NEF or CR2 is tens of megabytes, and RAW extensions are gitignored.
+
+RAW development cannot be tested without a real file, because behaviour varies by camera and
+decoder — `CIRAWFilter` exposes nine `Supported` flags precisely because not every control applies
+to every file. Drop a RAW here locally when working on it.
+
 ## `slideshow/`
 
 Five 1200 × 800 images numbered 1 to 5 in distinct colours, for folder browsing and the

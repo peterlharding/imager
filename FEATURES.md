@@ -103,10 +103,51 @@ run. See [[imager-sandbox-access]] in memory.
 
 ## v0.22.0 — RAW development
 
-`CIRAWFilter`, rendering from sensor data rather than the demosaiced image.
-Independent of the three above, and the largest of them.
-Also the prerequisite for white balance being worth having, and the only real answer to 8-bit
-banding.
+`CIRAWFilter`, rendering from sensor data rather than the demosaiced image that `NSImage` returns.
+The prerequisite for white balance being worth having, and the only real answer to 8-bit banding.
+Planned in detail; **needs a sample RAW file before building** — see the end of this entry.
+
+**The architectural crux.** RAW settings cannot be an `ImageEdit`. An `ImageEdit` transforms an
+image; RAW settings *produce* one, from the URL, before any image exists, so `apply(to:)` has
+nothing to act on.
+They therefore live as separate model state — and the snapshot-based undo introduced in v0.20.0
+pays for itself here: extending `HistoryEntry` to carry the RAW settings alongside the edit list
+gives RAW parameters undo, redo and single-step grouping for free. Had undo still popped individual
+edits, this would have needed a second, parallel mechanism.
+
+`rebuildImage()` gains one stage at the front: develop the base (RAW settings for a RAW file, the
+loaded bitmap otherwise) → replay the geometry edits → apply the final adjustment.
+
+**Controls for v1**, chosen as the ones that are genuinely impossible after demosaicing:
+`exposure`, `neutralTemperature` and `neutralTint`, `boostAmount` and `boostShadowAmount`, and the
+`highlightRecoveryEnabled` toggle — the last being the thing the shipped adjustments provably
+cannot do.
+Noise reduction, detail, sharpness, moire and lens correction are deliberately left for later:
+useful, but refinements rather than RAW-only capabilities.
+
+**Every control must be gated on its `Supported` flag.** `CIRAWFilter` exposes nine of them —
+`highlightRecoverySupported`, `localToneMapSupported`, `sharpnessSupported`,
+`lensCorrectionSupported` and so on — because support varies by camera and decoder. The pane has to
+ask per file and adapt rather than showing a fixed set of sliders. This was found by dumping the
+property list rather than assumed from the documentation.
+
+**Performance will need work here, unlike adjustments.** Demosaicing is far heavier than the 12 ms
+colour pipeline, so live sliders will need `draftModeEnabled`, `scaleFactor`, or both — the proxy
+approach held in reserve for v0.18.0 and not needed there. Measure before choosing.
+
+**Recipes and batch both carry RAW settings.** Recipes gain optional RAW settings, ignored when
+applied to a non-RAW image. `BatchProcessor` currently opens files with `NSImage(contentsOf:)`, so
+it needs the RAW path too — otherwise batching a folder of NEFs would silently use the default
+rendering, and developing one frame then applying it to the shoot is the main reason to want any of
+this.
+
+**Fallback.** `CIRAWFilter` can fail on an unsupported camera, so the `NSImage` path has to remain
+as a fallback rather than leaving the file unopenable.
+
+**Blocked on a sample RAW.** Development time cannot be measured, `CIRAWFilter` cannot be verified,
+and the `Supported` flags cannot be checked without a real file. Every plan in this sequence has
+been corrected by measurement, so this one should not be built blind. A NEF is around 25 MB, too
+large to commit; RAW extensions are gitignored, so a local copy under `data/` works.
 
 # ToDo
 
