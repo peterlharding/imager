@@ -62,7 +62,7 @@ Watch for: recipe names becoming filenames, so they need sanitising or an index;
 recipe to an image of a very different aspect ratio, where the orientation may not be what was
 wanted.
 
-## v0.21.0 — batch processing — **done, unreleased**
+## v0.21.0 — batch processing — **shipped**
 
 Apply a recipe, or the edits currently on screen, to every image in a folder.
 Built as planned. One thing the plan had not foreseen: batch initially wrote `.jpeg` where Export As
@@ -232,7 +232,7 @@ None currently open.
   first and everything else under "All Applications" — v0.17.0
 - Move to Trash (⌘⌫) while browsing, advancing to the next image — v0.19.0
 - Batch processing: File ▸ Process Folder… applies a recipe or the current edits to a whole
-  folder — unreleased
+  folder — v0.21.0
 
   Never overwrites: collisions become `photo-01.png`. The folder being processed is refused as a
   destination, so the originals are unreachable by construction rather than by correct naming.
