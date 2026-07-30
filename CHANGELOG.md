@@ -9,6 +9,10 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-07-30
+
+See [release_notes/0.22.0.md](release_notes/0.22.0.md) for details.
+
 ### Added
 
 - RAW development: a Develop RAW section in the Adjust pane for camera RAW files, with exposure,
@@ -381,7 +385,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://github.com/peterlharding/imager/compare/v0.21.0...HEAD
+[Unreleased]: https://github.com/peterlharding/imager/compare/v0.22.0...HEAD
+[0.22.0]: https://github.com/peterlharding/imager/releases/tag/v0.22.0
 [0.21.0]: https://github.com/peterlharding/imager/releases/tag/v0.21.0
 [0.20.0]: https://github.com/peterlharding/imager/releases/tag/v0.20.0
 [0.19.0]: https://github.com/peterlharding/imager/releases/tag/v0.19.0

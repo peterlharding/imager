@@ -101,7 +101,7 @@ feature in a row where the suite cannot see the thing most likely to break. The 
 from an open panel so it should carry write access, but treat that as unverified until it has been
 run. See [[imager-sandbox-access]] in memory.
 
-## v0.22.0 — RAW development — **done, unreleased**
+## v0.22.0 — RAW development — **shipped**
 
 `CIRAWFilter`, rendering from sensor data rather than the demosaiced image that `NSImage` returns.
 The prerequisite for white balance being worth having, and the only real answer to 8-bit banding.
@@ -246,7 +246,7 @@ None currently open.
 - Unsaved-edit protection: confirmation before edits are discarded, including on quit — v0.11.0
 - Multi-step undo and redo (⌘Z / ⇧⌘Z), with the menu naming each step — v0.14.0
 - RAW development from sensor data: exposure, temperature, tint, boost, shadow boost and
-  highlight recovery, carried by recipes and batch — unreleased
+  highlight recovery, carried by recipes and batch — v0.22.0
 
   Built as planned, and the plan's own measurements held. One `RawDeveloper` per open file is the
   whole performance story. RAW settings ride in the undo snapshots rather than being an
