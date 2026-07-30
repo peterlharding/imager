@@ -8,8 +8,15 @@ Edits live in memory until you deliberately save a copy.
 
 ## Requirements
 
-- macOS 14.0 or later
-- Xcode 15 or later to build from source
+- **macOS 26 or later.**
+
+  The build targets macOS 14.0 and the compiler enforces that, so no unavailable API is called
+  and Imager may well run on earlier systems.
+  It simply has not been tried on one, so anything before 26 is untested rather than unsupported.
+  Highlight recovery when developing RAW does genuinely need macOS 26; it is hidden below that.
+
+- Xcode 26 or later to build from source, since the project references APIs introduced in the
+  macOS 26 SDK, guarded by availability checks.
 
 ## Building
 

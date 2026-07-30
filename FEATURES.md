@@ -201,6 +201,12 @@ large to commit; RAW extensions are gitignored, so a local copy under `data/` wo
 
 ## Project
 
+- **Verify on an older macOS.** The build targets 14.0, but Imager has only ever been run on 26.x,
+  so the README claims 26 rather than 14. The compiler guarantees no unavailable API is called;
+  what is unverified is runtime behaviour, and this app leans on SwiftUI in places that have moved
+  between releases — `.inspector`, sheets raised from menu commands, `Slider(onEditingChanged:)`,
+  `@Observable` inside `Commands`.
+  A macOS 15 laptop is expected to be available for this; widen the README once it passes.
 - Port the image-handling code from the old C# program (the original goal for the app).
 - Print support, which would need the printing entitlement turned back on.
 
