@@ -211,6 +211,53 @@ struct BatchTests {
         #expect(written == ["photo1-01.png", "photo1.png", "photo2-01.png", "photo2.png"])
     }
 
+    // MARK: - RAW
+
+    private static var rawURL: URL { RawDevelopmentTests.rawURL }
+    private static var hasRawFile: Bool { RawDevelopmentTests.hasRawFile }
+
+    /// The "develop one frame, apply it to the shoot" path. Without this, batching a folder
+    /// of RAW files with a recipe made by developing one of them would silently use each
+    /// file's default rendering instead.
+    @Test("Batch develops a RAW source with the recipe's settings", .enabled(if: hasRawFile))
+    func batchDevelopsRawWithRecipeSettings() throws {
+        let destination = TestSupport.makeTemporaryDirectory()
+        defer { TestSupport.remove(destination) }
+        let developer = try #require(RawDeveloper(url: Self.rawURL))
+
+        var warmer = developer.defaults
+        warmer.temperature = developer.defaults.temperature + 3000
+
+        let plain = try #require(try? BatchProcessor.process(
+            source: Self.rawURL, edits: [], format: .fixed(.png), destination: destination
+        ).get())
+        let developed = try #require(try? BatchProcessor.process(
+            source: Self.rawURL, edits: [], format: .fixed(.png),
+            destination: destination, rawSettings: warmer
+        ).get())
+
+        let plainImage = try #require(NSImage(contentsOf: plain))
+        let developedImage = try #require(NSImage(contentsOf: developed))
+        #expect(
+            TestSupport.fingerprint(developedImage) != TestSupport.fingerprint(plainImage),
+            "the recipe's white balance reached the written file"
+        )
+    }
+
+    @Test("Batch still writes a RAW source with no development given", .enabled(if: hasRawFile))
+    func batchWritesRawWithoutSettings() throws {
+        let destination = TestSupport.makeTemporaryDirectory()
+        defer { TestSupport.remove(destination) }
+
+        let result = BatchProcessor.process(
+            source: Self.rawURL, edits: [], format: .sameAsSource, destination: destination
+        )
+
+        let written = try #require(try? result.get())
+        #expect(written.pathExtension == "png", "RAW cannot be written, so it falls back")
+        #expect(NSImage(contentsOf: written) != nil)
+    }
+
     // MARK: - Format resolution
 
     @Test("Same as source keeps a writable format", arguments: ["png", "jpg", "tiff", "heic"])

@@ -92,6 +92,12 @@ metadata, and tells you whether those edits have been saved yet.
   The selection can be moved and resized before you commit it.
 - **Rotate** left, right, or 180°, plus a fine-rotation stepper for small-angle straightening.
 - **Flip** horizontally or vertically.
+- **Develop camera RAW** from the sensor data, when the file is a RAW.
+  The Adjust pane gains a Develop RAW section with exposure, white balance as temperature and
+  tint, boost and shadow boost, and highlight recovery where the camera and system support it.
+  These act on the sensor data rather than on a rendered image, which is why they can recover
+  highlights and set white balance properly where the ordinary adjustments cannot.
+  Reset Development returns to the reading your camera recorded, not to zero.
 - **Adjust** tone and colour from the inspector's Adjust pane: exposure, highlights, shadows,
   contrast, saturation, vibrance and hue, with a Reset button.
   The image updates as you drag, and the whole drag counts as one undo step.

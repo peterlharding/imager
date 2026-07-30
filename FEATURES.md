@@ -101,7 +101,7 @@ feature in a row where the suite cannot see the thing most likely to break. The 
 from an open panel so it should carry write access, but treat that as unverified until it has been
 run. See [[imager-sandbox-access]] in memory.
 
-## v0.22.0 — RAW development
+## v0.22.0 — RAW development — **done, unreleased**
 
 `CIRAWFilter`, rendering from sensor data rather than the demosaiced image that `NSImage` returns.
 The prerequisite for white balance being worth having, and the only real answer to 8-bit banding.
@@ -176,11 +176,10 @@ large to commit; RAW extensions are gitignored, so a local copy under `data/` wo
 
 ## Editing
 
-- RAW development via `CIRAWFilter(imageURL:)`, exposing exposure, boost and neutral
-  temperature/tint rendered from sensor data.
-  Distinct from the shipped adjustments, which act on the already-demosaiced 8-bit rendering
-  that `NSImage` hands back, so they cannot recover highlights the way darktable or DxO do.
-- White balance, curves, and per-channel colour, once the adjustment pipeline has earned it.
+- Curves and per-channel colour, once the adjustment pipeline has earned it.
+- More RAW controls: noise reduction, detail, sharpness, moire, lens correction. All exposed by
+  `CIRAWFilter` and all gated on their own `Supported` flags; left out of v0.22.0 as refinements
+  rather than things only RAW can do.
 - Drag an image out of the window to another app.
 - Resize and scale an image to given dimensions.
 - Straighten with a visible grid overlay.
@@ -246,6 +245,19 @@ None currently open.
 - Rotate left, right and 180°, fine-angle rotation, and flip horizontally or vertically — v0.9.0
 - Unsaved-edit protection: confirmation before edits are discarded, including on quit — v0.11.0
 - Multi-step undo and redo (⌘Z / ⇧⌘Z), with the menu naming each step — v0.14.0
+- RAW development from sensor data: exposure, temperature, tint, boost, shadow boost and
+  highlight recovery, carried by recipes and batch — unreleased
+
+  Built as planned, and the plan's own measurements held. One `RawDeveloper` per open file is the
+  whole performance story. RAW settings ride in the undo snapshots rather than being an
+  `ImageEdit`, which gave undo, redo and per-drag grouping for free.
+
+  Two things the plan missed. `isHighlightRecoveryEnabled` needs macOS 26 while Imager targets 14,
+  found by the compiler rather than by the probe script — a standalone `swift` script compiles
+  against the host OS, not the app's deployment target, so probing that way proves less than it
+  appears to. And `TestSupport.allPixels` re-rendered the whole image per pixel, which was
+  invisible on 4x4 test images and took a RAW preview from milliseconds to minutes.
+
 - Image adjustments in an Adjust inspector pane: exposure, highlights, shadows, contrast,
   saturation, vibrance and hue, with Reset — v0.18.0
 

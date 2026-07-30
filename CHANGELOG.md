@@ -9,6 +9,23 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+### Added
+
+- RAW development: a Develop RAW section in the Adjust pane for camera RAW files, with exposure,
+  white balance as temperature and tint, boost and shadow boost, and highlight recovery where it
+  is supported. These act on the sensor data through `CIRAWFilter` rather than on a rendered
+  image, so they can set white balance and recover highlights in ways the existing adjustments
+  cannot. Reset Development returns to the reading the camera recorded rather than to zero, since
+  a RAW file has no fixed neutral.
+- Recipes and batch processing both carry RAW development, so one frame can be developed and the
+  result applied across a shoot. Applying a RAW recipe to an ordinary image ignores the
+  development and applies the rest.
+
+### Changed
+
+- Undo history now carries RAW development alongside the edits, so developing undoes, redoes and
+  groups per drag like any other change.
+
 ## [0.21.0] - 2026-07-30
 
 See [release_notes/0.21.0.md](release_notes/0.21.0.md) for details.
