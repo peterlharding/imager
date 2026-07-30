@@ -6,8 +6,12 @@ Plan below says *when*; ToDo says *what and why*.
 
 # Plan
 
-The next few releases, in order. Provisional: nothing is fixed until it is built, and anything
-here can be resequenced.
+**v1.0.0 shipped on 2026-07-30**, marking the point at which Imager is finished enough to rely on.
+The recipe file format, the preference keys and the behaviour described in the README are from now
+on treated as things not to break without a major version.
+
+Below is the sequence that led there. The next few releases, in order. Provisional: nothing is
+fixed until it is built, and anything here can be resequenced.
 
 Numbering follows [RELEASING.md](RELEASING.md), where a new feature is a MINOR bump and PATCH is
 for backward-compatible fixes only. That is why these are minor releases rather than 0.18.x: they

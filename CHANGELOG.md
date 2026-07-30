@@ -9,6 +9,23 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-30
+
+See [release_notes/1.0.0.md](release_notes/1.0.0.md) for details.
+
+The first stable release. The application itself is unchanged from 0.22.0: the version marks the
+point at which Imager is considered finished enough to rely on, rather than a set of new features.
+
+From here, the recipe file format, the preference keys and the behaviour described in the README
+are treated as things not to break without a major version.
+
+### Changed
+
+- The README now states macOS 26, the version Imager has actually been run on, rather than the
+  14.0 the build targets. No unavailable API is called — the compiler enforces that against the
+  deployment target — so earlier systems are untested rather than unsupported, and the deployment
+  target is deliberately left at 14.0.
+
 ## [0.22.0] - 2026-07-30
 
 See [release_notes/0.22.0.md](release_notes/0.22.0.md) for details.
@@ -385,7 +402,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://github.com/peterlharding/imager/compare/v0.22.0...HEAD
+[Unreleased]: https://github.com/peterlharding/imager/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/peterlharding/imager/releases/tag/v1.0.0
 [0.22.0]: https://github.com/peterlharding/imager/releases/tag/v0.22.0
 [0.21.0]: https://github.com/peterlharding/imager/releases/tag/v0.21.0
 [0.20.0]: https://github.com/peterlharding/imager/releases/tag/v0.20.0
