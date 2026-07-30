@@ -295,7 +295,11 @@ private struct SheetPresentation: ViewModifier {
             .focusedSceneValue(\.saveRecipeSheetVisible, $showSaveRecipe)
             .sheet(isPresented: $showSaveRecipe) {
                 SaveRecipeSheet(existingNames: recipes.recipes.map(\.name)) { name in
-                    recipes.save(name: name, edits: model.recipeEdits)
+                    recipes.save(
+                        name: name,
+                        edits: model.recipeEdits,
+                        rawSettings: model.recipeRawSettings
+                    )
                 }
             }
             .focusedSceneValue(\.batchSheetVisible, $showBatch)

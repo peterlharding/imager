@@ -39,7 +39,13 @@ final class BatchRunner {
 
     // MARK: - Running
 
-    func start(sources: [URL], edits: [ImageEdit], format: BatchFormat, destination: URL) {
+    func start(
+        sources: [URL],
+        edits: [ImageEdit],
+        format: BatchFormat,
+        destination: URL,
+        rawSettings: RawSettings? = nil
+    ) {
         guard !isRunning, !sources.isEmpty else { return }
 
         isRunning = true
@@ -66,7 +72,8 @@ final class BatchRunner {
                 // The heavy work - decode, filter, encode, write - off the main thread.
                 let outcome = await Task.detached(priority: .userInitiated) {
                     BatchProcessor.process(
-                        source: source, edits: edits, format: format, destination: destination
+                        source: source, edits: edits, format: format,
+                        destination: destination, rawSettings: rawSettings
                     )
                 }.value
 

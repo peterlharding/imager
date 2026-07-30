@@ -75,13 +75,23 @@ enum BatchProcessor {
     }
 
     /// Processes one image, returning the file written.
+    ///
+    /// `rawSettings` develops a RAW source from its sensor data rather than taking the
+    /// decoder's default rendering. Without it, batching a folder of RAW files with a recipe
+    /// made by developing one of them would silently ignore the development.
     static func process(
         source: URL,
         edits: [ImageEdit],
         format: BatchFormat,
-        destination: URL
+        destination: URL,
+        rawSettings: RawSettings? = nil
     ) -> Result<URL, Failure> {
-        guard let image = NSImage(contentsOf: source) else { return .failure(.unreadable) }
+        let developed: NSImage? = rawSettings.flatMap { settings in
+            RawDeveloper(url: source)?.develop(settings, preview: false)
+        }
+        guard let image = developed ?? NSImage(contentsOf: source) else {
+            return .failure(.unreadable)
+        }
 
         let result = edits.applied(to: image)
         let type = format.contentType(for: source)

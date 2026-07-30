@@ -25,6 +25,9 @@ final class ImageModel {
     /// Each entry carries the name of the action that moved away from it, for the menu.
     private struct HistoryEntry {
         let edits: [ImageEdit]
+        /// Carried alongside the edits because RAW development is not an `ImageEdit` - it
+        /// produces the image rather than transforming one - yet must undo with everything else.
+        let rawSettings: RawSettings?
         let actionName: String
     }
 
@@ -37,6 +40,25 @@ final class ImageModel {
     /// for a pasted image until it is exported. That makes a pasted image count as
     /// unsaved straight away, so closing or quitting asks before throwing it away.
     private var savedEdits: [ImageEdit]? = []
+
+    /// How the current RAW file is being developed, or nil when the image is not RAW.
+    private(set) var rawSettings: RawSettings?
+
+    /// The RAW settings as of the last save or load, so developing counts as unsaved work.
+    private var savedRawSettings: RawSettings?
+
+    /// Holds the decoder open for the current RAW file. Keeping one alive is what makes
+    /// dragging a RAW slider cost about 7 ms instead of 86 ms or more.
+    @ObservationIgnored private var rawDeveloper: RawDeveloper?
+
+    /// True when the image on screen came from a RAW file that can be developed.
+    var isRaw: Bool { rawDeveloper != nil }
+
+    /// Which RAW controls this file supports; varies by camera, decoder and system version.
+    var rawSupport: RawSupport { rawDeveloper?.support ?? RawSupport() }
+
+    /// The decoder's own reading of this shot, which is what Reset returns to.
+    var rawDefaults: RawSettings? { rawDeveloper?.defaults }
 
     /// True when the working image differs from the original (an edit can be undone).
     var canRevert: Bool { !edits.isEmpty }
@@ -52,7 +74,7 @@ final class ImageModel {
     ///
     /// Derived rather than stored so that undoing back to the saved state clears it,
     /// and redoing away from it sets it again.
-    var hasUnsavedEdits: Bool { edits != savedEdits }
+    var hasUnsavedEdits: Bool { edits != savedEdits || rawSettings != savedRawSettings }
 
     /// An action waiting on the user's answer to the "discard changes?" alert.
     /// Non-nil while the alert is showing.
@@ -162,6 +184,9 @@ final class ImageModel {
         errorMessage = nil
         clearHistory()
         savedEdits = []
+        rawDeveloper = nil
+        rawSettings = nil
+        savedRawSettings = nil
         releaseFileAccess()
         clearFolder()
     }
@@ -249,12 +274,21 @@ final class ImageModel {
         releaseFileAccess()
         let scoped = url.startAccessingSecurityScopedResource()
 
-        guard let image = NSImage(contentsOf: url) else {
+        // A RAW file is developed from its sensor data; anything else is just decoded.
+        // The developer is kept for the lifetime of the open file - see RawDeveloper.
+        let developer = RawDeveloper(url: url)
+        let loaded = developer.flatMap { $0.develop($0.defaults, preview: false) }
+            ?? NSImage(contentsOf: url)
+
+        guard let image = loaded else {
             if scoped { url.stopAccessingSecurityScopedResource() }
             self.errorMessage = "Couldn't read an image from \(url.lastPathComponent)."
             return
         }
         fileAccess = scoped ? url : nil
+        rawDeveloper = developer
+        rawSettings = developer?.defaults
+        savedRawSettings = developer?.defaults
         self.image = image
         self.originalImage = image
         self.url = url
@@ -306,6 +340,7 @@ final class ImageModel {
     func markEditsSaved() {
         guard hasUnsavedEdits else { return }
         savedEdits = edits
+        savedRawSettings = rawSettings
         updateInfo()
     }
 
@@ -344,7 +379,7 @@ final class ImageModel {
     /// Snapshots the current history so `undo()` can come back to it, and drops any redo
     /// history, since the timeline has branched.
     private func recordForUndo(_ actionName: String) {
-        undoStack.append(HistoryEntry(edits: edits, actionName: actionName))
+        undoStack.append(HistoryEntry(edits: edits, rawSettings: rawSettings, actionName: actionName))
         redoStack.removeAll()
     }
 
@@ -392,6 +427,38 @@ final class ImageModel {
         }
         selectionIndex = nil
         performSelect(min(index, folderImages.count - 1))
+    }
+
+    // MARK: - RAW development
+
+    /// Changes how the RAW file is developed.
+    ///
+    /// Mirrors `setAdjustments`: one drag is one undo step. `preview` develops at reduced
+    /// scale for speed, so a drag should pass true and `commitRawDevelopment()` should follow
+    /// when it ends.
+    func setRawSettings(_ value: RawSettings, continuingSession: Bool = false, preview: Bool = false) {
+        guard rawDeveloper != nil, rawSettings != nil else { return }
+
+        if !continuingSession {
+            guard value != rawSettings else { return }
+            recordForUndo("Develop")
+        }
+        rawSettings = value
+        rebuildImage(preview: preview)
+    }
+
+    /// Re-develops at full size after a drag, which is left at preview scale for speed.
+    func commitRawDevelopment() {
+        guard rawDeveloper != nil else { return }
+        rebuildImage(preview: false)
+    }
+
+    /// Returns development to the decoder's own reading of the shot.
+    func resetRawDevelopment() {
+        guard let rawDefaults, rawSettings != rawDefaults else { return }
+        recordForUndo("Reset Development")
+        rawSettings = rawDefaults
+        rebuildImage()
     }
 
     // MARK: - Adjustments
@@ -444,16 +511,18 @@ final class ImageModel {
     /// Takes back the most recent action.
     func undo() {
         guard let entry = undoStack.popLast() else { return }
-        redoStack.append(HistoryEntry(edits: edits, actionName: entry.actionName))
+        redoStack.append(HistoryEntry(edits: edits, rawSettings: rawSettings, actionName: entry.actionName))
         edits = entry.edits
+        rawSettings = entry.rawSettings
         rebuildImage()
     }
 
     /// Re-applies the most recently undone action.
     func redo() {
         guard let entry = redoStack.popLast() else { return }
-        undoStack.append(HistoryEntry(edits: edits, actionName: entry.actionName))
+        undoStack.append(HistoryEntry(edits: edits, rawSettings: rawSettings, actionName: entry.actionName))
         edits = entry.edits
+        rawSettings = entry.rawSettings
         rebuildImage()
     }
 
@@ -461,6 +530,9 @@ final class ImageModel {
     func revert() {
         guard originalImage != nil else { return }
         clearHistory()
+        // Reverting means the file as it was opened, which for a RAW includes the
+        // development the decoder chose.
+        rawSettings = rawDeveloper?.defaults
         // A pasted image still has no file behind it, so reverting leaves it unsaved.
         savedEdits = url == nil ? nil : []
         rebuildImage()
@@ -472,7 +544,15 @@ final class ImageModel {
     /// coordinates of one particular image and cannot transfer to another.
     var recipeEdits: [ImageEdit] { edits.filter { !$0.isCrop } }
 
-    var canSaveRecipe: Bool { !recipeEdits.isEmpty }
+    /// RAW development worth saving: only when it differs from what the decoder chose, so a
+    /// recipe made from an untouched RAW does not silently pin another shot to this one's
+    /// white balance.
+    var recipeRawSettings: RawSettings? {
+        guard let rawSettings, rawSettings != rawDefaults else { return nil }
+        return rawSettings
+    }
+
+    var canSaveRecipe: Bool { !recipeEdits.isEmpty || recipeRawSettings != nil }
 
     /// Applies a saved recipe, replacing the orientation and adjustments while leaving
     /// any crop alone.
@@ -484,12 +564,17 @@ final class ImageModel {
     func applyRecipe(_ recipe: Recipe) {
         guard image != nil else { return }
         let updated = edits.filter { $0.isCrop } + recipe.edits
-        // Applying a recipe that lands on the history already in force changes nothing, so
+        // RAW development travels with the recipe, but only lands on a file that has some.
+        let updatedRaw = (rawDeveloper != nil && recipe.rawSettings != nil)
+            ? recipe.rawSettings
+            : rawSettings
+        // Applying a recipe that lands on the state already in force changes nothing, so
         // it must not record an undo step. Otherwise the first ⌘Z appears to do nothing:
         // it restores a state identical to the current one, and only the second gets back.
-        guard updated != edits else { return }
+        guard updated != edits || updatedRaw != rawSettings else { return }
         recordForUndo("Apply “\(recipe.name)”")
         edits = updated
+        rawSettings = updatedRaw
         rebuildImage()
     }
 
@@ -529,14 +614,27 @@ final class ImageModel {
         errorMessage = nil
         clearHistory()
         savedEdits = nil
+        // A pasted image has no file, so nothing to develop.
+        rawDeveloper = nil
+        rawSettings = nil
+        savedRawSettings = nil
         updateInfo()
     }
 
     /// Recomputes the displayed image by replaying `edits` onto the original.
-    private func rebuildImage() {
-        guard let originalImage else { return }
-        image = edits.isEmpty ? originalImage : edits.applied(to: originalImage)
+    /// Recomputes the image: develop the base, then replay the edits onto it.
+    ///
+    /// `preview` develops a RAW at reduced scale, which is what makes dragging a RAW slider
+    /// responsive. It has no effect on a file that is not RAW.
+    private func rebuildImage(preview: Bool = false) {
+        guard let base = developedBase(preview: preview) else { return }
+        image = edits.isEmpty ? base : edits.applied(to: base)
         updateInfo()
+    }
+
+    private func developedBase(preview: Bool) -> NSImage? {
+        guard let rawDeveloper, let rawSettings else { return originalImage }
+        return rawDeveloper.develop(rawSettings, preview: preview) ?? originalImage
     }
 
     private func releaseFileAccess() {

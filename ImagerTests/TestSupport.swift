@@ -70,11 +70,58 @@ enum TestSupport {
     }
 
     /// Every pixel of an image, row-major from the top-left, for whole-image comparisons.
+    /// Renders once and reads the whole buffer.
+    ///
+    /// It previously called `pixel(_:x:y:)` per pixel, each of which re-rendered the entire
+    /// image - quadratic, and invisible while every test image was a few pixels across. A
+    /// 1840x1228 RAW preview took it from milliseconds to minutes.
     static func allPixels(_ image: NSImage) -> [Pixel] {
         let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil)!
-        return (0..<cg.height).flatMap { y in
-            (0..<cg.width).map { x in pixel(image, x: x, y: y) }
+        let width = cg.width
+        let height = cg.height
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        let context = CGContext(
+            data: &bytes,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        )!
+        context.draw(cg, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        return stride(from: 0, to: bytes.count, by: 4).map { offset in
+            Pixel(r: bytes[offset], g: bytes[offset + 1], b: bytes[offset + 2], a: bytes[offset + 3])
         }
+    }
+
+    /// A cheap stand-in for comparing whole images, for cases where the images are large and
+    /// only "did this change" matters.
+    static func fingerprint(_ image: NSImage) -> Int {
+        let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil)!
+        let width = cg.width
+        let height = cg.height
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        let context = CGContext(
+            data: &bytes,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        )!
+        context.draw(cg, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        var hasher = Hasher()
+        hasher.combine(width)
+        hasher.combine(height)
+        // Every 997th byte: prime, so it does not fall into step with the row stride.
+        for offset in stride(from: 0, to: bytes.count, by: 997) {
+            hasher.combine(bytes[offset])
+        }
+        return hasher.finalize()
     }
 
     static func size(_ image: NSImage) -> (width: Int, height: Int) {

@@ -16,11 +16,16 @@ struct Recipe: Identifiable, Equatable, Codable {
     var created: Date
     var edits: [ImageEdit]
 
+    /// How to develop a RAW file, when the recipe was made from one. Ignored when applied to
+    /// an image that is not RAW, so one recipe can serve both.
+    var rawSettings: RawSettings?
+
     var id: String { name }
 
-    init(name: String, edits: [ImageEdit], created: Date = Date()) {
+    init(name: String, edits: [ImageEdit], rawSettings: RawSettings? = nil, created: Date = Date()) {
         self.name = name
         self.edits = edits
+        self.rawSettings = rawSettings
         self.created = created
     }
 }
@@ -73,18 +78,18 @@ final class RecipeStore {
 
     /// Saves under `name`, replacing any recipe already using it.
     @discardableResult
-    func save(name: String, edits: [ImageEdit]) -> Bool {
+    func save(name: String, edits: [ImageEdit], rawSettings: RawSettings? = nil) -> Bool {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             errorMessage = "A recipe needs a name."
             return false
         }
-        guard !edits.isEmpty else {
+        guard !edits.isEmpty || rawSettings != nil else {
             errorMessage = "There are no changes to save."
             return false
         }
 
-        let recipe = Recipe(name: trimmed, edits: edits)
+        let recipe = Recipe(name: trimmed, edits: edits, rawSettings: rawSettings)
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             let encoder = JSONEncoder()

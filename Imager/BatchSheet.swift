@@ -83,7 +83,7 @@ struct BatchSheet: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
 
-        if editsToApply.isEmpty {
+        if !hasSomethingToApply {
             Label("There are no changes to apply.", systemImage: "info.circle")
                 .font(.callout)
                 .foregroundStyle(.secondary)
@@ -95,7 +95,7 @@ struct BatchSheet: View {
                 .keyboardShortcut(.cancelAction)
             Button("Start") { start() }
                 .keyboardShortcut(.defaultAction)
-                .disabled(destination == nil || editsToApply.isEmpty)
+                .disabled(destination == nil || !hasSomethingToApply)
         }
     }
 
@@ -170,6 +170,23 @@ struct BatchSheet: View {
         }
     }
 
+    /// A RAW recipe can be development alone, with no edits at all, so this is not the same
+    /// as having edits.
+    private var hasSomethingToApply: Bool {
+        !editsToApply.isEmpty || rawSettingsToApply != nil
+    }
+
+    /// RAW development to apply across the folder, so developing one frame and applying it to
+    /// the shoot works rather than silently using each file's default rendering.
+    private var rawSettingsToApply: RawSettings? {
+        switch source {
+        case .currentEdits:
+            model.recipeRawSettings
+        case .recipe(let name):
+            recipes.recipes.first { $0.name == name }?.rawSettings
+        }
+    }
+
     private func chooseDestination() {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true
@@ -197,7 +214,8 @@ struct BatchSheet: View {
             sources: model.folderImages,
             edits: editsToApply,
             format: format,
-            destination: destination
+            destination: destination,
+            rawSettings: rawSettingsToApply
         )
     }
 }
