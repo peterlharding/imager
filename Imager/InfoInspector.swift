@@ -71,6 +71,11 @@ struct SaveRecipeSheetKey: FocusedValueKey {
     typealias Value = Binding<Bool>
 }
 
+/// Lets the Process Folder menu command raise the batch sheet.
+struct BatchSheetKey: FocusedValueKey {
+    typealias Value = Binding<Bool>
+}
+
 extension FocusedValues {
     var inspectorVisible: Binding<Bool>? {
         get { self[InspectorVisibilityKey.self] }
@@ -80,6 +85,11 @@ extension FocusedValues {
     var saveRecipeSheetVisible: Binding<Bool>? {
         get { self[SaveRecipeSheetKey.self] }
         set { self[SaveRecipeSheetKey.self] = newValue }
+    }
+
+    var batchSheetVisible: Binding<Bool>? {
+        get { self[BatchSheetKey.self] }
+        set { self[BatchSheetKey.self] = newValue }
     }
 
     var sidebarVisible: Binding<Bool>? {

@@ -8,6 +8,7 @@ struct ContentView: View {
     @Environment(\.openWindow) private var openWindow
     @State private var showInfo = false
     @State private var showSaveRecipe = false
+    @State private var showBatch = false
     @State private var showSidebar = false
     @State private var showRotate = false
     @State private var zoom = ZoomController()
@@ -35,12 +36,14 @@ struct ContentView: View {
                 .inspectorColumnWidth(min: 240, ideal: 300, max: 420)
         }
         .focusedSceneValue(\.inspectorVisible, $showInfo)
-        .focusedSceneValue(\.saveRecipeSheetVisible, $showSaveRecipe)
-        .sheet(isPresented: $showSaveRecipe) {
-            SaveRecipeSheet(existingNames: recipes.recipes.map(\.name)) { name in
-                recipes.save(name: name, edits: model.recipeEdits)
-            }
-        }
+        // Extracted: with the sheets inline the modifier chain grew past what the type
+        // checker will resolve in reasonable time.
+        .modifier(SheetPresentation(
+            model: model,
+            recipes: recipes,
+            showSaveRecipe: $showSaveRecipe,
+            showBatch: $showBatch
+        ))
         .focusedSceneValue(\.sidebarVisible, $showSidebar)
         .focusedSceneValue(\.zoomController, zoom)
         .onAppear { model.setWindowOpener { openWindow(id: "main") } }
@@ -276,6 +279,29 @@ struct ContentView: View {
             DispatchQueue.main.async { model.open(url) }
         }
         return true
+    }
+}
+
+/// The sheets raised from menu commands, and the focused values that let those commands
+/// reach them. Kept out of `ContentView`'s own chain to keep it type-checkable.
+private struct SheetPresentation: ViewModifier {
+    let model: ImageModel
+    let recipes: RecipeStore
+    @Binding var showSaveRecipe: Bool
+    @Binding var showBatch: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .focusedSceneValue(\.saveRecipeSheetVisible, $showSaveRecipe)
+            .sheet(isPresented: $showSaveRecipe) {
+                SaveRecipeSheet(existingNames: recipes.recipes.map(\.name)) { name in
+                    recipes.save(name: name, edits: model.recipeEdits)
+                }
+            }
+            .focusedSceneValue(\.batchSheetVisible, $showBatch)
+            .sheet(isPresented: $showBatch) {
+                BatchSheet(model: model, recipes: recipes)
+            }
     }
 }
 

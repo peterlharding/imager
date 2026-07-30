@@ -121,6 +121,24 @@ To keep an edit, use **Save As…** or **Export As** to write a new file.
   **Paste Image** (**⌘V**) opens an image from it.
   A pasted image has no file behind it, so Imager treats it as unsaved until you export it.
 
+### Processing a whole folder
+
+**File ▸ Process Folder…** applies a saved recipe, or the changes on screen, to every image in the
+folder you are browsing.
+Choose an output format - each image's own, or one format for all of them - pick a destination, and
+watch it run.
+
+Two things it will not do:
+
+- **It never writes over an original.**
+  A name already in use becomes `photo-01.png`, `photo-02.png` and so on rather than replacing
+  anything.
+- **It refuses the folder being processed as the destination**, so the originals are out of reach
+  by construction rather than by careful naming.
+
+A file that cannot be read or written is reported in a summary at the end rather than stopping the
+run, and Cancel stops after the image in flight.
+
 ### Handing off to another editor
 
 **File ▸ Edit With** opens the current file in another application: GIMP, darktable, the DxO

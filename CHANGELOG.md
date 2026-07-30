@@ -9,6 +9,18 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+### Added
+
+- Batch processing: File ▸ Process Folder… applies a saved recipe, or the changes on screen, to
+  every image in the folder being browsed, writing the results to a destination you choose. Output
+  is each image's own format — falling back to PNG for camera RAW — or one chosen format for all
+  of them. Progress is shown per file and the run can be cancelled.
+
+  It never writes over an original: a name already in use becomes `photo-01.png`, `photo-02.png`
+  and so on. The folder being processed is refused as a destination, so the originals are out of
+  reach by construction. A file that cannot be read or written is reported in a summary rather
+  than stopping the run.
+
 ## [0.20.0] - 2026-07-30
 
 See [release_notes/0.20.0.md](release_notes/0.20.0.md) for details.

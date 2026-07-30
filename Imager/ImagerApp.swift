@@ -107,6 +107,7 @@ private struct AppCommands: Commands {
     let recipes: RecipeStore
     @Environment(\.openWindow) private var openWindow
     @FocusedValue(\.saveRecipeSheetVisible) private var saveRecipeSheetVisible
+    @FocusedValue(\.batchSheetVisible) private var batchSheetVisible
 
     /// Menu bindings onto the model. `model` is a plain reference here rather than
     /// `@Bindable`, so the bindings are made by hand.
@@ -239,6 +240,11 @@ private struct AppCommands: Commands {
             Button("Move to Trash") { model.moveToTrash() }
                 .keyboardShortcut(.delete, modifiers: .command)
                 .disabled(!model.canMoveToTrash)
+
+            Divider()
+
+            Button("Process Folder…") { batchSheetVisible?.wrappedValue = true }
+                .disabled(batchSheetVisible == nil || model.folderImages.isEmpty)
 
             Divider()
 

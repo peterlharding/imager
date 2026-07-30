@@ -94,7 +94,9 @@ enum ImageExporter {
         return .saved
     }
 
-    private static func write(_ image: NSImage, to url: URL, as type: UTType) -> String? {
+    /// Writes `image` to `url`, returning an error message on failure or nil on success.
+    /// Shared with batch processing so both paths encode identically.
+    static func write(_ image: NSImage, to url: URL, as type: UTType) -> String? {
         guard let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return "Couldn't read the image data to save."
         }

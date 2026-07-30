@@ -62,10 +62,14 @@ Watch for: recipe names becoming filenames, so they need sanitising or an index;
 recipe to an image of a very different aspect ratio, where the orientation may not be what was
 wanted.
 
-## v0.21.0 — batch processing
+## v0.21.0 — batch processing — **done, unreleased**
 
 Apply a recipe, or the edits currently on screen, to every image in a folder.
-Recipes shipped in v0.20.0, so this is unblocked. Planned in detail, ready to build.
+Built as planned. One thing the plan had not foreseen: batch initially wrote `.jpeg` where Export As
+writes `.jpg`, because it took the extension from `preferredFilenameExtension` rather than from
+`ImageFormat`. The same image getting a different name depending on which route wrote it is the
+sort of inconsistency nobody would think to look for, so `BatchFormat.fileExtension(for:)` now
+follows the existing rules and a test pins every format against Export As.
 
 **Two safety properties, which drove the decisions.**
 
@@ -122,10 +126,9 @@ banding.
 
 ## Files and browsing
 
-- Batch processing: apply an edit recipe, or a format conversion, to every image in a folder,
-  writing the results somewhere else rather than over the originals.
-  Needs recipes first, since a batch is a recipe applied many times.
-  The work beyond that is a destination folder, a naming rule, progress, and cancellation.
+- Batch over a folder other than the one being browsed, or over a selection rather than all of it.
+- Parallel batch processing. Sequential was chosen to keep memory bounded on folders of 24 MP
+  files; revisit only if a real batch turns out to be slower than the disk.
 - Recursive folder browsing, including subfolders.
 
 ## Viewing
@@ -228,6 +231,13 @@ None currently open.
 - File ▸ Edit With: hand the current file to any other application, with declared editors listed
   first and everything else under "All Applications" — v0.17.0
 - Move to Trash (⌘⌫) while browsing, advancing to the next image — v0.19.0
+- Batch processing: File ▸ Process Folder… applies a recipe or the current edits to a whole
+  folder — unreleased
+
+  Never overwrites: collisions become `photo-01.png`. The folder being processed is refused as a
+  destination, so the originals are unreachable by construction rather than by correct naming.
+  Failures are summarised rather than stopping the run. Sequential, off the main thread,
+  cancellable between images.
 
   No confirmation, deliberately: the Trash is the undo, Finder's ⌘⌫ does not prompt either, and
   asking on every image would defeat the culling this exists for. It does not ask about unsaved
