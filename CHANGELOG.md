@@ -9,6 +9,38 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-31
+
+See [release_notes/1.2.0.md](release_notes/1.2.0.md) for details.
+
+### Added
+
+- Stacks: group a burst, a bracket, or several tries at one shot so the thumbnail sidebar shows
+  one row for the set rather than a run of near-identical frames. A stack presents a single frame,
+  its *pick*, badged with the number it holds and opened by a disclosure triangle.
+- **View ▸ Stacks ▸ Stack Photos…** groups a folder by capture time. The threshold is chosen from
+  presets named by how the frames were shot, and the sheet says how the folder would group before
+  anything is committed.
+- **Set Pick** (**⌥⌘P**) makes the frame on screen the one its stack shows. **Unstack** breaks one
+  group up, **Unstack All** removes them all, and **Expand All** / **Collapse All** open and close
+  every stack at once.
+- Groupings are stored in `.imager/stacks.json` beside the photos, as filenames relative to the
+  folder, so they survive the folder being moved or renamed. Folders that cannot be written to -
+  a camera card, a read-only mount, a network share - keep their groupings in Application Support
+  instead.
+- `data/stacks`, ten JPEGs with real EXIF capture times laid out like a shoot, for exercising
+  stacking by hand.
+
+### Changed
+
+- Arrow-key navigation steps past a collapsed stack, and slideshows and **Process Folder** run on
+  picks: the pictures taken, rather than every frame taken to get them. Every frame stays reachable
+  by expanding the stack.
+- **Move to Trash** reconciles the grouping. Trashing a pick hands the stack to a surviving frame,
+  and trashing down to a single frame dissolves it.
+- Groupings are reconciled against the files present each time a folder is opened, so frames
+  deleted or renamed in Finder do not leave stale stacks behind.
+
 ## [1.1.0] - 2026-07-31
 
 See [release_notes/1.1.0.md](release_notes/1.1.0.md) for details.
@@ -413,7 +445,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://github.com/peterlharding/imager/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/peterlharding/imager/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/peterlharding/imager/releases/tag/v1.2.0
 [1.1.0]: https://github.com/peterlharding/imager/releases/tag/v1.1.0
 [1.0.0]: https://github.com/peterlharding/imager/releases/tag/v1.0.0
 [0.22.0]: https://github.com/peterlharding/imager/releases/tag/v0.22.0
