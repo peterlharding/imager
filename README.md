@@ -268,6 +268,7 @@ folder in that case.
 | `FEATURES.md` | Planned and shipped features, with the release each landed in |
 | `release_notes/` | One user-facing notes file per release |
 | `RELEASING.md` | The release process |
+| `CLAUDE.md` | Standing instructions for working on the project, including the invariants |
 
 ## Versioning and releases
 

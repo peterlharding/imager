@@ -25,6 +25,7 @@
 		1A00000000000000000000D4 /* release_notes */ = {isa = PBXFileReference; lastKnownFileType = folder; path = release_notes; sourceTree = "<group>"; };
 		1A00000000000000000000D5 /* RELEASING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASING.md; sourceTree = "<group>"; };
 		1A00000000000000000000D6 /* FEATURES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = FEATURES.md; sourceTree = "<group>"; };
+		1A00000000000000000000D8 /* CLAUDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CLAUDE.md; sourceTree = "<group>"; };
 		1A00000000000000000000D7 /* data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = data; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -76,6 +77,7 @@
 			children = (
 				1A00000000000000000000D1 /* CHANGELOG.md */,
 				1A00000000000000000000D6 /* FEATURES.md */,
+				1A00000000000000000000D8 /* CLAUDE.md */,
 				1A00000000000000000000D5 /* RELEASING.md */,
 				1A00000000000000000000D4 /* release_notes */,
 				1A00000000000000000000D2 /* README.md */,
