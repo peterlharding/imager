@@ -155,7 +155,9 @@ private struct AppCommands: Commands {
             Button("Set Pick") {
                 if let url = model.url { model.promoteToPick(url) }
             }
-            .keyboardShortcut("\\", modifiers: .command)
+            // ⌘\ was the first choice and is claimed by other applications; ⌥⌘P is free and
+            // still says Pick.
+            .keyboardShortcut("p", modifiers: [.command, .option])
             .disabled(currentStack.map { $0.pick == model.url?.lastPathComponent } ?? true)
 
             Button("Unstack") {

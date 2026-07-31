@@ -75,7 +75,7 @@ recent files or settings.
   disclosure triangle opens it up.
   **View ▸ Stacks ▸ Stack Photos…** groups the folder by capture time; the sheet says how it would
   group before committing.
-  **Set Pick** (**⌘\\**) makes the frame on screen the one the stack shows, and **Unstack** breaks
+  **Set Pick** (**⌥⌘P**) makes the frame on screen the one the stack shows, and **Unstack** breaks
   the group up again.
   Arrow keys step past a collapsed stack, and slideshows and folder processing run on picks: the
   pictures, rather than every frame taken to get them.
@@ -243,7 +243,7 @@ swatches and RGB sliders, or a checkerboard, with an opacity slider and a live p
 | ⌥⌘S | Show / Hide Thumbnails |
 | ← / → | Previous / Next Image |
 | ⇧⌘F | Start / Stop Slideshow |
-| ⌘\ | Set Pick (of the current stack) |
+| ⌥⌘P | Set Pick (of the current stack) |
 | ⌘= / ⌘- | Zoom In / Zoom Out |
 | ⌘0 | Zoom to Fit |
 | ⌥⌘L | Show / Hide Loupe |
