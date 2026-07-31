@@ -268,13 +268,26 @@ large to commit; RAW extensions are gitignored, so a local copy under `data/` wo
   files; revisit only if a real batch turns out to be slower than the disk.
 - Recursive folder browsing, including subfolders.
 
-- **Do not "speed up" thumbnails for large folders. Measured 2026-07-31.**
-  Generation is already lazy — `List` realizes only the visible rows, and each row asks for its
-  own — and a thumbnail costs **12 ms on a 36 MP NEF**, about the same as a JPEG, because
-  QuickLook reads the file's embedded preview rather than developing the sensor data.
-  Prefetching or a faster path would buy nothing.
-  The cache is bounded at 512 with first-in eviction, which is the part that did need doing, since
-  it outlives the folder that filled it.
+- **Do not persist thumbnails into `.imager/`. Measured 2026-08-01.**
+  macOS keeps its own QuickLook thumbnail cache, it survives app launches, and only
+  `qlmanage -r cache` clears it. Cold against warm: a JPEG is 9.6 ms then 1.0 ms, a 36 MP NEF
+  about 82 ms then 24 ms.
+  Reading a small PNG back from disk costs about the same as the warm OS hit, so a per-folder
+  cache would duplicate a cache that already exists rather than beat it.
+  It would also write megabytes into folders that were only *browsed* — today `.imager/` appears
+  only when the user deliberately stacks something — and it would need mtime and size validation
+  that stacks do not, since a grouping is about identity and a thumbnail is about content.
+
+  **The exception to measure for is a network share**, where cold generation reads the file over
+  the wire and 82 ms could become a second. That is the case where a cache earns its keep, and it
+  would argue for Application Support rather than the share itself.
+
+- Generation itself is already lazy and needs no work: `List` realizes only the visible rows and
+  each asks for its own, and QuickLook reads a RAW file's embedded preview rather than developing
+  the sensor data, which is why a NEF is in the same order as a JPEG rather than hundreds of
+  times worse.
+  The in-memory cache is bounded at 512 with first-in eviction, which is the part that did need
+  doing, since it outlives the folder that filled it.
 
 - **An EXIF capture time costs about 18 ms on RAW against 0.3 ms on JPEG. Measured 2026-07-31.**
   The reader opens the container either way, so the cost is per file rather than per byte, and a
