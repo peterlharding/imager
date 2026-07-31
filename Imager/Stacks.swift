@@ -112,10 +112,30 @@ enum Stacks {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
               let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
               let exif = properties[kCGImagePropertyExifDictionary] as? [CFString: Any],
-              let taken = exif[kCGImagePropertyExifDateTimeOriginal] as? String else {
+              let taken = exif[kCGImagePropertyExifDateTimeOriginal] as? String,
+              let moment = exifDateFormatter.date(from: taken) else {
             return nil
         }
-        return exifDateFormatter.date(from: taken)
+        return moment.addingTimeInterval(subSecond(exif))
+    }
+
+    /// The fraction of a second EXIF records separately.
+    ///
+    /// `DateTimeOriginal` has whole-second resolution, and a burst is exactly the case that
+    /// breaks on: several frames land in the same second and would look simultaneous. Cameras
+    /// that shoot bursts write `SubsecTimeOriginal` alongside, so read it where it is there.
+    private static func subSecond(_ exif: [CFString: Any]) -> TimeInterval {
+        let raw = exif[kCGImagePropertyExifSubsecTimeOriginal]
+        // Written as a string by most cameras, as a number by some.
+        let digits: String
+        switch raw {
+        case let text as String: digits = text.trimmingCharacters(in: .whitespaces)
+        case let number as NSNumber: digits = number.stringValue
+        default: return 0
+        }
+        guard !digits.isEmpty, digits.allSatisfy(\.isNumber),
+              let fraction = Double("0." + digits) else { return 0 }
+        return fraction
     }
 
     /// EXIF timestamps are "yyyy:MM:dd HH:mm:ss" in the camera's local time, with no zone.

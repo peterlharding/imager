@@ -7,6 +7,8 @@
 // producing images twice the intended size on a Retina Mac.
 
 import AppKit
+import ImageIO
+import UniformTypeIdentifiers
 
 let outputDirectory = URL(fileURLWithPath: CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "data")
 
@@ -54,6 +56,26 @@ final class Canvas {
         let data = NSBitmapImageRep(cgImage: cgImage).representation(using: .png, properties: [:])!
         try data.write(to: url)
         print("  \(url.lastPathComponent)  \(cgImage.width)x\(cgImage.height)  \(data.count / 1024) KB")
+    }
+
+    /// Writes a JPEG carrying an EXIF capture time, which is what stacking groups by.
+    func writeJPEG(to url: URL, taken: String, subSecond: String) throws {
+        let cgImage = context.makeImage()!
+        guard let destination = CGImageDestinationCreateWithURL(
+            url as CFURL, UTType.jpeg.identifier as CFString, 1, nil
+        ) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        let properties: [CFString: Any] = [
+            kCGImageDestinationLossyCompressionQuality: 0.9,
+            kCGImagePropertyExifDictionary: [
+                kCGImagePropertyExifDateTimeOriginal: taken,
+                kCGImagePropertyExifSubsecTimeOriginal: subSecond,
+            ],
+        ]
+        CGImageDestinationAddImage(destination, cgImage, properties as CFDictionary)
+        guard CGImageDestinationFinalize(destination) else { throw CocoaError(.fileWriteUnknown) }
+        print("  \(url.lastPathComponent)  \(cgImage.width)x\(cgImage.height)  taken \(taken).\(subSecond)")
     }
 }
 
@@ -132,9 +154,72 @@ func makeSlideshowSet(in directory: URL) throws {
     }
 }
 
+// MARK: - Stacking set
+
+/// A folder shaped like a real shoot, so auto-stacking has something to find.
+///
+/// JPEG rather than PNG because the capture time lives in EXIF, which PNG does not carry -
+/// the other test images here are invisible to stacking for exactly that reason.
+///
+/// The timings are chosen so the presets in the Stack Photos sheet each give a different
+/// answer: half a second finds the burst alone, two seconds adds the bracket, and a minute
+/// also picks up the two tries at the last frame.
+func makeStackingSet(in directory: URL) throws {
+    /// Seconds from the start of the shoot, and the label drawn on the frame.
+    let frames: [(offset: Double, label: String)] = [
+        (0.00, "burst 1"), (0.25, "burst 2"), (0.50, "burst 3"), (0.75, "burst 4"),
+        (240, "single"),
+        (400, "bracket -1"), (402, "bracket 0"), (404, "bracket +1"),
+        (700, "try 1"), (720, "try 2"),
+    ]
+    // Every gap between groups is well over a minute, so the lone frame stays lone at every
+    // threshold the sheet offers - at exactly 60s apart it would have joined the bracket.
+
+    let folder = directory.appendingPathComponent("stacks", isDirectory: true)
+    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy:MM:dd HH:mm:ss"
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    // A fixed start - 2025-03-03 12:30 UTC - so regenerating does not churn the files.
+    // Written in local time, as a camera does, so the reading back matches.
+    let start = Date(timeIntervalSince1970: 1_741_012_200)
+
+    for (index, frame) in frames.enumerated() {
+        let canvas = Canvas(width: 1200, height: 800)
+        let hue = Double(index) / Double(frames.count)
+        canvas.drawWithAppKit {
+            NSColor(calibratedHue: hue, saturation: 0.45, brightness: 0.9, alpha: 1).setFill()
+            NSRect(x: 0, y: 0, width: canvas.width, height: canvas.height).fill()
+
+            let label = NSAttributedString(string: frame.label, attributes: [
+                .font: NSFont.systemFont(ofSize: 110, weight: .semibold),
+                .foregroundColor: NSColor.white,
+            ])
+            let size = label.size()
+            label.draw(at: NSPoint(
+                x: (CGFloat(canvas.width) - size.width) / 2,
+                y: (CGFloat(canvas.height) - size.height) / 2
+            ))
+        }
+
+        let moment = start.addingTimeInterval(frame.offset)
+        // EXIF DateTimeOriginal holds whole seconds only; the fraction goes in SubsecTimeOriginal,
+        // which is how frames inside a burst are told apart at all.
+        let fraction = frame.offset - frame.offset.rounded(.down)
+        let name = String(format: "shot-%02d.jpg", index + 1)
+        try canvas.writeJPEG(
+            to: folder.appendingPathComponent(name),
+            taken: formatter.string(from: moment),
+            subSecond: String(format: "%02d", Int((fraction * 100).rounded()))
+        )
+    }
+}
+
 // MARK: - Run
 
 try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
 print("writing to \(outputDirectory.path)")
 try makeAdjustmentTestPattern(in: outputDirectory)
 try makeSlideshowSet(in: outputDirectory)
+try makeStackingSet(in: outputDirectory)

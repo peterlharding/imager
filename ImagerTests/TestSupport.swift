@@ -1,5 +1,7 @@
 import AppKit
 import Foundation
+import ImageIO
+import UniformTypeIdentifiers
 
 /// Helpers shared by the test suites: building images with known pixels, reading
 /// those pixels back, and staging real files on disk for the code paths that
@@ -147,6 +149,35 @@ enum TestSupport {
         let data = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])!
         let url = directory.appendingPathComponent(name)
         try! data.write(to: url)
+        return url
+    }
+
+    /// Writes a JPEG carrying an EXIF capture time, so anything that groups by when a
+    /// photograph was taken can be exercised against a real file rather than a stub.
+    ///
+    /// `subSecond` is the digits a camera writes in `SubsecTimeOriginal` - "45" meaning .45s -
+    /// which is how frames within one second are told apart.
+    @discardableResult
+    static func writeJPEG(
+        named name: String,
+        in directory: URL,
+        taken: String?,
+        subSecond: String? = nil
+    ) -> URL {
+        let image = solidImage(width: 8, height: 8)
+        let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil)!
+        let url = directory.appendingPathComponent(name)
+        let destination = CGImageDestinationCreateWithURL(
+            url as CFURL, UTType.jpeg.identifier as CFString, 1, nil
+        )!
+
+        var exif: [CFString: Any] = [:]
+        if let taken { exif[kCGImagePropertyExifDateTimeOriginal] = taken }
+        if let subSecond { exif[kCGImagePropertyExifSubsecTimeOriginal] = subSecond }
+        let properties: [CFString: Any] = exif.isEmpty ? [:] : [kCGImagePropertyExifDictionary: exif]
+
+        CGImageDestinationAddImage(destination, cg, properties as CFDictionary)
+        precondition(CGImageDestinationFinalize(destination))
         return url
     }
 

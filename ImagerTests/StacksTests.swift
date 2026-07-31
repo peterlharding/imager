@@ -180,6 +180,106 @@ struct StacksTests {
         #expect(Stacks.autoStack(dated: [("a.nef", date(0))], within: 5).isEmpty)
     }
 
+    // MARK: - Reading the capture time
+
+    @Test("The capture time comes from EXIF")
+    func readsCaptureDate() throws {
+        let folder = TestSupport.makeTemporaryDirectory()
+        defer { TestSupport.remove(folder) }
+        let url = TestSupport.writeJPEG(named: "shot.jpg", in: folder, taken: "2025:03:02 14:30:15")
+
+        let taken = try #require(Stacks.captureDate(of: url))
+
+        var components = DateComponents()
+        components.year = 2025; components.month = 3; components.day = 2
+        components.hour = 14; components.minute = 30; components.second = 15
+        let expected = try #require(Calendar.current.date(from: components))
+        #expect(abs(taken.timeIntervalSince(expected)) < 1)
+    }
+
+    /// EXIF records whole seconds, which is exactly what a burst breaks: without the fraction
+    /// every frame in one second looks simultaneous.
+    @Test("Frames within a second are told apart by the sub-second field")
+    func readsSubSecond() throws {
+        let folder = TestSupport.makeTemporaryDirectory()
+        defer { TestSupport.remove(folder) }
+        let first = TestSupport.writeJPEG(
+            named: "a.jpg", in: folder, taken: "2025:03:02 14:30:15", subSecond: "20"
+        )
+        let second = TestSupport.writeJPEG(
+            named: "b.jpg", in: folder, taken: "2025:03:02 14:30:15", subSecond: "80"
+        )
+
+        let one = try #require(Stacks.captureDate(of: first))
+        let other = try #require(Stacks.captureDate(of: second))
+
+        #expect(abs(other.timeIntervalSince(one) - 0.6) < 0.001)
+    }
+
+    @Test("A file with no capture time gives nothing")
+    func noCaptureDate() {
+        let folder = TestSupport.makeTemporaryDirectory()
+        defer { TestSupport.remove(folder) }
+        let url = TestSupport.writeJPEG(named: "scan.jpg", in: folder, taken: nil)
+
+        #expect(Stacks.captureDate(of: url) == nil)
+    }
+
+    @Test("A file that is not an image gives nothing")
+    func notAnImage() throws {
+        let folder = TestSupport.makeTemporaryDirectory()
+        defer { TestSupport.remove(folder) }
+        let url = folder.appendingPathComponent("notes.txt")
+        try Data("hello".utf8).write(to: url)
+
+        #expect(Stacks.captureDate(of: url) == nil)
+    }
+
+    /// End to end over real files: EXIF written to disk, read back, and grouped. The pieces are
+    /// covered separately above; this checks they add up to the answer a photographer expects,
+    /// and that the thresholds offered in the sheet each mean something different.
+    @Test("A shoot groups the way it was shot")
+    func groupsARealShoot() {
+        let folder = TestSupport.makeTemporaryDirectory()
+        defer { TestSupport.remove(folder) }
+        // A burst, a lone frame, a three-shot bracket, then two tries at one composition.
+        let shoot: [(offset: Double, name: String)] = [
+            (0.00, "shot-01.jpg"), (0.25, "shot-02.jpg"), (0.50, "shot-03.jpg"), (0.75, "shot-04.jpg"),
+            (240, "shot-05.jpg"),
+            (400, "shot-06.jpg"), (402, "shot-07.jpg"), (404, "shot-08.jpg"),
+            (700, "shot-09.jpg"), (720, "shot-10.jpg"),
+        ]
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy:MM:dd HH:mm:ss"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        let start = Date(timeIntervalSince1970: 1_741_012_200)
+
+        let dated = shoot.map { frame -> (name: String, date: Date?) in
+            let moment = start.addingTimeInterval(frame.offset)
+            let fraction = frame.offset - frame.offset.rounded(.down)
+            let url = TestSupport.writeJPEG(
+                named: frame.name,
+                in: folder,
+                taken: formatter.string(from: moment),
+                subSecond: String(format: "%02d", Int((fraction * 100).rounded()))
+            )
+            return (frame.name, Stacks.captureDate(of: url))
+        }
+
+        #expect(dated.allSatisfy { $0.date != nil }, "every frame carries a capture time")
+
+        let burstOnly = Stacks.autoStack(dated: dated, within: 0.5)
+        #expect(burstOnly.count == 1)
+        #expect(burstOnly[0].count == 4, "the burst, told apart only by the sub-second field")
+
+        let withBracket = Stacks.autoStack(dated: dated, within: 2)
+        #expect(withBracket.map(\.count) == [4, 3], "the burst and the bracket, not the lone frame")
+
+        let withTries = Stacks.autoStack(dated: dated, within: 60)
+        #expect(withTries.map(\.count) == [4, 3, 2])
+        #expect(withTries[2].frames == ["shot-09.jpg", "shot-10.jpg"])
+    }
+
     // MARK: - Storage
 
     @Test("Stacks are written beside the photos and read back")
