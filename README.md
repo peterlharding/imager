@@ -72,6 +72,10 @@ recent files or settings.
 - Zoom and pan a large image: scroll to zoom, drag to pan, or pinch on a trackpad.
   The toolbar shows the current magnification and snaps back to fit when clicked, and you can zoom
   to fit or jump to actual size from the View menu.
+- Inspect detail with the **loupe** (**⌥⌘L**): a magnifier that follows the cursor and shows one
+  image pixel per point, so focus and sharpness can be judged without leaving fit-to-window.
+  Its size is set in Settings ▸ General.
+  Past 100% it magnifies *less* than the view, since it always shows actual pixels.
 - View it full screen from the toolbar or **View ▸ Enter Full Screen**.
 - Run a folder as a slideshow with **View ▸ Start Slideshow** (**⇧⌘F**) or the toolbar's play
   button.
@@ -205,8 +209,9 @@ launched once, or until you log out and back in.
 
 ### Settings
 
-**Settings ▸ General** sets how many recent files to remember, from 1 to 50, and the slideshow's
-interval in seconds and whether it repeats after the last image.
+**Settings ▸ General** sets how many recent files to remember, from 1 to 50; the slideshow's
+interval in seconds and whether it repeats after the last image; and the loupe's size, from 60 to
+400 points across.
 
 **Settings ▸ Appearance** sets the background behind the image, either a solid colour with preset
 swatches and RGB sliders, or a checkerboard, with an opacity slider and a live preview.
@@ -228,6 +233,7 @@ swatches and RGB sliders, or a checkerboard, with an opacity slider and a live p
 | ⇧⌘F | Start / Stop Slideshow |
 | ⌘= / ⌘- | Zoom In / Zoom Out |
 | ⌘0 | Zoom to Fit |
+| ⌥⌘L | Show / Hide Loupe |
 | ⌘1 | Actual Size |
 | ⌘Z / ⇧⌘Z | Undo / Redo |
 | ⌘C / ⌘V | Copy Image / Paste Image |

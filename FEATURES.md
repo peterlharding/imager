@@ -215,13 +215,6 @@ large to commit; RAW extensions are gitignored, so a local copy under `data/` wo
 
 - Slideshow transitions, and a random order option.
 - Compare two images side by side.
-- **Loupe**, as Aperture had: a draggable magnifier over the image showing a patch at full
-  resolution, rather than zooming the whole view.
-  The point is checking focus or sharpness without leaving fit-to-window, which is where you
-  spend most of your time.
-  `ZoomableImageView` already holds the image at native size, so this is an overlay that samples
-  a region around the cursor and draws it magnified — no change to the zoom machinery.
-  Decisions: whether it follows the cursor or is placed and left, and what magnification it uses.
 
 ## Project
 
@@ -359,6 +352,17 @@ None currently open.
 - Zoom and pan: scroll to zoom, drag to pan, pinch, fit and actual size — v0.4.0
 - Full screen — v0.9.0
 - Full-screen slideshow of a folder, with a configurable interval and repeat — v0.13.0
+- Loupe (⌥⌘L): a cursor-following magnifier at one image pixel per point, sized in
+  Settings — unreleased
+
+  From Aperture. Follows the cursor rather than being placed, and shows 1:1 rather than a fixed
+  factor, because judging focus means seeing actual pixels.
+  The geometry is inverse and easy to get backwards: the view's coordinates are image pixels and
+  the scroll view's magnification means one pixel occupies that many points, so reaching 1:1 needs
+  scaling by `1 / magnification` — about 8x on a 36 MP file fitted to a window — and the circle
+  needs the same treatment to stay a fixed size on screen. Extracted as `LoupeGeometry` so that
+  arithmetic is testable; the drawing itself needs a window and is not.
+  Consequence worth knowing: past 100% it magnifies *less* than the view.
 
 ## Application
 

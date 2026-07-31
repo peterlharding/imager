@@ -9,6 +9,13 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+### Added
+
+- Loupe (View ▸ Show Loupe, ⌥⌘L): a magnifier that follows the cursor and shows one image pixel
+  per point, for judging focus without leaving fit-to-window. Its size is set in
+  Settings ▸ General, from 60 to 400 points across. Because it always shows actual pixels, it
+  magnifies less than the view once zoomed past 100%.
+
 ## [1.0.0] - 2026-07-30
 
 See [release_notes/1.0.0.md](release_notes/1.0.0.md) for details.

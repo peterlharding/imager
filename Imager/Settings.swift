@@ -95,6 +95,7 @@ struct GeneralSettings: View {
     @Bindable var recents: RecentFilesStore
     @AppStorage(SlideshowSetting.intervalKey) private var interval = SlideshowSetting.defaultInterval
     @AppStorage(SlideshowSetting.loopKey) private var loops = SlideshowSetting.defaultLoop
+    @AppStorage(LoupeSetting.diameterKey) private var loupeDiameter = Double(LoupeSetting.defaultDiameter)
 
     var body: some View {
         Form {
@@ -117,6 +118,21 @@ struct GeneralSettings: View {
                 Picker("After the last image", selection: $loops) {
                     Text("Repeat continuously").tag(true)
                     Text("Stop the slideshow").tag(false)
+                }
+            }
+
+            Section("Loupe") {
+                LabeledContent("Size") {
+                    HStack {
+                        Slider(
+                            value: $loupeDiameter,
+                            in: Double(LoupeSetting.minDiameter)...Double(LoupeSetting.maxDiameter)
+                        )
+                        Text("\(Int(loupeDiameter)) pt")
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                            .frame(width: 56, alignment: .trailing)
+                    }
                 }
             }
         }

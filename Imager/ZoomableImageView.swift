@@ -23,10 +23,34 @@ final class ZoomController {
     /// Current crop selection in image pixel coordinates (top-left origin), or nil.
     var selection: CGRect?
 
+    /// Shows a magnifier following the cursor, at one image pixel per point.
+    ///
+    /// Redraws through the scroll view directly rather than relying on SwiftUI noticing:
+    /// the flag is read in AppKit drawing code, which no SwiftUI update is tied to.
+    var loupeEnabled = false {
+        didSet { scrollView?.syncToolState() }
+    }
+
     /// True when there is a selection to crop.
     var canCrop: Bool { selection != nil }
 
     @ObservationIgnored weak var scrollView: ZoomScrollView?
+
+    @ObservationIgnored private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
+
+    /// How wide the loupe is on screen, from Settings.
+    ///
+    /// Read on demand rather than cached: the loupe only shows while the cursor is over the
+    /// image, so changing this in Settings means the cursor has left, and any movement on the
+    /// way back redraws with the new value.
+    var loupeDiameter: CGFloat { LoupeSetting.diameter(from: defaults) }
+
+    /// True when there is an image for the loupe to magnify.
+    var canUseLoupe: Bool { scrollView != nil }
 
     func zoomIn() { scrollView?.zoom(by: 1.25) }
     func zoomOut() { scrollView?.zoom(by: 1 / 1.25) }
@@ -64,6 +88,48 @@ struct ZoomableImageView: NSViewRepresentable {
 
     final class Coordinator {
         var currentImage: NSImage?
+    }
+}
+
+/// Persisted loupe preferences, edited in Settings ▸ General.
+enum LoupeSetting {
+    static let diameterKey = "loupe.diameter"
+
+    /// Points across, as it appears on screen.
+    static let defaultDiameter: CGFloat = 140
+    static let minDiameter: CGFloat = 60
+    static let maxDiameter: CGFloat = 400
+
+    /// Reads the stored diameter, clamped, falling back to the default when unset.
+    static func diameter(from defaults: UserDefaults) -> CGFloat {
+        let stored = defaults.double(forKey: diameterKey)
+        guard stored > 0 else { return defaultDiameter }
+        return min(max(CGFloat(stored), minDiameter), maxDiameter)
+    }
+}
+
+/// Where the loupe's circle and contents land, given how far the view is zoomed.
+///
+/// Extracted from the drawing because the relationship is inverse and easy to get backwards:
+/// the further *out* the view is zoomed, the *more* the loupe has to magnify to reach one image
+/// pixel per point, and the larger its circle has to be in view coordinates to occupy a fixed
+/// size on screen.
+struct LoupeGeometry: Equatable {
+    /// Radius in view coordinates, which for this view are image pixels.
+    let radius: CGFloat
+
+    /// How much to scale the image about the cursor.
+    let contentScale: CGFloat
+
+    /// Ring width in view coordinates.
+    let ringWidth: CGFloat
+
+    init(magnification: CGFloat, screenRadius: CGFloat, targetZoom: CGFloat, screenRingWidth: CGFloat = 2) {
+        // A magnification of zero would divide by nothing; treat it as 1:1 rather than crash.
+        let scale = magnification > 0 ? magnification : 1
+        radius = screenRadius / scale
+        contentScale = targetZoom / scale
+        ringWidth = screenRingWidth / scale
     }
 }
 
@@ -258,6 +324,13 @@ final class ZoomImageView: NSImageView {
     private var drag: Drag?
     private var lastPanPoint: NSPoint?
 
+    /// Where the loupe is centred, in view coordinates, or nil when the cursor is elsewhere.
+    private var loupeCenter: NSPoint?
+
+    /// What the loupe shows: 1 means one image pixel per point, which is what makes it
+    /// useful for judging focus.
+    private static let loupeTargetZoom: CGFloat = 1
+
     override var isFlipped: Bool { false }
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
@@ -276,6 +349,32 @@ final class ZoomImageView: NSImageView {
 
     private var selectionViewRect: NSRect? {
         controller?.selection.map { viewRect(fromPixel: $0) }
+    }
+
+    // MARK: - Loupe tracking
+
+    private var isLoupeShowing: Bool { controller?.loupeEnabled == true }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        for area in trackingAreas { removeTrackingArea(area) }
+        addTrackingArea(NSTrackingArea(
+            rect: .zero,
+            options: [.mouseMoved, .mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
+            owner: self
+        ))
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        guard isLoupeShowing else { return }
+        loupeCenter = convert(event.locationInWindow, from: nil)
+        needsDisplay = true
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        guard loupeCenter != nil else { return }
+        loupeCenter = nil
+        needsDisplay = true
     }
 
     // MARK: - Mouse
@@ -403,6 +502,7 @@ final class ZoomImageView: NSImageView {
 
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
+        if isLoupeShowing, let loupeCenter { drawLoupe(at: loupeCenter) }
         guard isSelecting, let rect = selectionViewRect, rect.width > 0, rect.height > 0 else { return }
 
         let line = 1 / magnification
@@ -432,6 +532,50 @@ final class ZoomImageView: NSImageView {
             outline.lineWidth = line
             outline.stroke()
         }
+    }
+
+    // MARK: - Loupe
+
+    /// Draws a magnified patch of the image inside a circle at `center`.
+    ///
+    /// This view's coordinates are image pixels, and the scroll view's magnification means one
+    /// pixel occupies `magnification` points on screen. So showing one pixel per point means
+    /// scaling the content by `1 / magnification` about the cursor - roughly 8x when a large
+    /// photo is fitted to the window. Everything is divided by the magnification for the same
+    /// reason: the circle and its ring are specified in screen points, then converted.
+    private func drawLoupe(at center: NSPoint) {
+        guard let image else { return }
+
+        let geometry = LoupeGeometry(
+            magnification: magnification,
+            screenRadius: (controller?.loupeDiameter ?? LoupeSetting.defaultDiameter) / 2,
+            targetZoom: Self.loupeTargetZoom
+        )
+        let radius = geometry.radius
+        let circle = NSBezierPath(ovalIn: NSRect(
+            x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2
+        ))
+
+        NSGraphicsContext.saveGraphicsState()
+        circle.addClip()
+
+        // Filled first, so the area past an edge of the image reads as empty rather than
+        // leaving whatever was underneath.
+        NSColor.black.setFill()
+        circle.fill()
+
+        let transform = NSAffineTransform()
+        transform.translateX(by: center.x, yBy: center.y)
+        transform.scale(by: geometry.contentScale)
+        transform.translateX(by: -center.x, yBy: -center.y)
+        transform.concat()
+        image.draw(in: bounds)
+
+        NSGraphicsContext.restoreGraphicsState()
+
+        NSColor.white.withAlphaComponent(0.9).setStroke()
+        circle.lineWidth = geometry.ringWidth
+        circle.stroke()
     }
 
     // MARK: - Cursor

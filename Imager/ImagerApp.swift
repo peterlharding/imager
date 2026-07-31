@@ -354,6 +354,12 @@ private struct AppCommands: Commands {
             Button("Actual Size") { zoom?.actualSize() }
                 .keyboardShortcut("1", modifiers: .command)
                 .disabled(zoomDisabled)
+
+            Button(zoom?.loupeEnabled == true ? "Hide Loupe" : "Show Loupe") {
+                zoom?.loupeEnabled.toggle()
+            }
+            .keyboardShortcut("l", modifiers: [.command, .option])
+            .disabled(zoomDisabled)
         }
         CommandMenu("Image") {
             Button("Crop to Selection") {
