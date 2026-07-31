@@ -46,3 +46,27 @@ slideshow: the numerals make it obvious which image is showing and which way an 
 
 Useful for sort order (name, date modified, file size, reversed), ← / → navigation, the
 thumbnail sidebar, and watching a slideshow advance and wrap.
+
+## `stacks/`
+
+Ten 1200 × 800 JPEGs laid out like a shoot, for stacking.
+
+JPEG rather than PNG because stacking groups by EXIF capture time, and PNG carries none — the
+rest of this folder is invisible to the feature for exactly that reason.
+
+| Frames | Label | Spacing |
+| --- | --- | --- |
+| `shot-01` to `shot-04` | burst 1–4 | a quarter of a second apart |
+| `shot-05` | single | four minutes after the burst |
+| `shot-06` to `shot-08` | bracket −1, 0, +1 | two seconds apart |
+| `shot-09`, `shot-10` | try 1, try 2 | twenty seconds apart |
+
+The spacing gives each preset in **View ▸ Stacks ▸ Stack Photos…** a different answer: half a
+second finds the burst alone, two seconds adds the bracket, and a minute also picks up the two
+tries. Every gap *between* groups is well over a minute, so the lone frame stays lone throughout.
+
+The burst is the interesting case. All four frames carry the same `DateTimeOriginal`, since EXIF
+records whole seconds; they are told apart only by `SubsecTimeOriginal`, which is what a camera
+writes for a burst and what Imager reads.
+
+Stacking writes `.imager/stacks.json` into the folder. Delete that directory to start over.

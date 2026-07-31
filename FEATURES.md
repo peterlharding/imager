@@ -17,11 +17,35 @@ Numbering follows [RELEASING.md](RELEASING.md), where a new feature is a MINOR b
 for backward-compatible fixes only. That is why these are minor releases rather than 0.18.x: they
 all carry features.
 
-## v1.2.0 — stacks
+## v1.2.0 — stacks — **shipped**
 
 Group a burst or a bracket so the set collapses to a single pick in the sidebar, expanding when the
 rest is wanted. From Aperture. The point is that a shoot of 400 frames where 300 are near-duplicates
 browses as the hundred pictures actually taken, without deleting the alternatives.
+
+Built as planned. Four things the plan had not accounted for:
+
+- **EXIF capture time is not precise enough on its own.** `DateTimeOriginal` holds whole seconds,
+  which is exactly the case a burst breaks: four frames in one second look simultaneous, so a burst
+  either groups at every threshold or at none. Cameras that shoot bursts write
+  `SubsecTimeOriginal` alongside, and reading it is what makes the half-second threshold mean
+  anything. The plan's "nearly free" was right about the grouping and wrong about the reading.
+- **Selection had to stay indexed on the whole folder.** Making `selectionIndex` count visible rows
+  instead would have touched display, sorting, saving and trashing. Keeping it on `folderImages`
+  and deriving `visibleImages` and `pickImages` left all four untouched; what changed is only what
+  is shown and what stepping moves through.
+- **Collapsing a stack can hide the image on screen**, which would leave the sidebar highlighting a
+  row that is not there. Collapsing, trashing and auto-stacking all move the selection to the pick.
+- **Gaps are measured against the previous frame, not the first of the group.** Otherwise holding
+  the shutter down splits into a new stack every time the burst outruns the threshold. Not in the
+  plan because the plan said "a sort and a scan", which hides the choice.
+
+The test data needed rebuilding too: everything in `data/` was PNG, which carries no EXIF, so
+stacking was invisible to all of it. `data/stacks` is ten JPEGs laid out like a shoot.
+
+**Move to Trash** ended up more general than planned - it takes whatever is on screen rather than
+only the pick, then reconciles - which keeps the same guarantee (never destroys anything not
+visible) and also works when a stack is expanded.
 
 **Storage, settled.** A `.imager/` directory beside the photos, holding `stacks.json`.
 
@@ -57,6 +81,7 @@ file-management one, so the features that present a folder follow the picks:
 - **Move to Trash takes only the pick**, promoting the next frame to replace it. Deliberately the
   conservative one: it never destroys anything not visible at the time, at the cost of several
   presses to bin a whole bad burst. A whole-stack command can follow later if that proves annoying.
+  *(Shipped as "takes whatever is on screen" — see above.)*
 
 **Will need a real run.** Writing into a browsed folder is something Imager has never done. The
 entitlement is `user-selected.read-write` so it should be permitted, but that is reasoning, not
@@ -242,8 +267,6 @@ large to commit; RAW extensions are gitignored, so a local copy under `data/` wo
 - Parallel batch processing. Sequential was chosen to keep memory bounded on folders of 24 MP
   files; revisit only if a real batch turns out to be slower than the disk.
 - Recursive folder browsing, including subfolders.
-- **Stacks**: group a burst or bracket so the set collapses to a single pick.
-  Planned in detail — see v1.2.0 under Plan.
 
 ## Viewing
 
@@ -386,6 +409,14 @@ None currently open.
 - Zoom and pan: scroll to zoom, drag to pan, pinch, fit and actual size — v0.4.0
 - Full screen — v0.9.0
 - Full-screen slideshow of a folder, with a configurable interval and repeat — v0.13.0
+- Stacks: group a burst or bracket so the set collapses to a single pick, with auto-stacking by
+  capture time, stored beside the photos — v1.2.0
+
+  From Aperture, and the design record is under Plan above. The part worth remembering: EXIF
+  `DateTimeOriginal` is whole seconds, so a burst needs `SubsecTimeOriginal` to be grouped at all,
+  and gaps are measured against the previous frame rather than the first of the group so that
+  holding the shutter down stays one stack.
+
 - Loupe (⌥⌘L): a cursor-following magnifier at one image pixel per point, sized in
   Settings — v1.1.0
 

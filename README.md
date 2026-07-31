@@ -69,6 +69,18 @@ recent files or settings.
   reversed.
   Name order is natural, so `photo2` comes before `photo10`.
   Re-sorting keeps the image you are looking at on screen, and the choice is remembered.
+- Group a burst, a bracket, or several tries at one shot into a **stack**, so the sidebar shows
+  one row for the set rather than a run of near-identical frames.
+  A stack presents a single frame - its **pick** - with a badge showing how many it holds, and a
+  disclosure triangle opens it up.
+  **View ▸ Stacks ▸ Stack Photos…** groups the folder by capture time; the sheet says how it would
+  group before committing.
+  **Set Pick** (**⌘\\**) makes the frame on screen the one the stack shows, and **Unstack** breaks
+  the group up again.
+  Arrow keys step past a collapsed stack, and slideshows and folder processing run on picks: the
+  pictures, rather than every frame taken to get them.
+  Groupings are stored in `.imager/stacks.json` beside the photos, so they survive the folder being
+  moved or renamed, and are reconciled against the files present each time the folder is opened.
 - Zoom and pan a large image: scroll to zoom, drag to pan, or pinch on a trackpad.
   The toolbar shows the current magnification and snaps back to fit when clicked, and you can zoom
   to fit or jump to actual size from the View menu.
@@ -231,6 +243,7 @@ swatches and RGB sliders, or a checkerboard, with an opacity slider and a live p
 | ⌥⌘S | Show / Hide Thumbnails |
 | ← / → | Previous / Next Image |
 | ⇧⌘F | Start / Stop Slideshow |
+| ⌘\ | Set Pick (of the current stack) |
 | ⌘= / ⌘- | Zoom In / Zoom Out |
 | ⌘0 | Zoom to Fit |
 | ⌥⌘L | Show / Hide Loupe |
@@ -254,6 +267,14 @@ Opening a folder grants recursive read access to that folder, which is what make
 work.
 Opening a single file grants access to that file alone, so Imager cannot enumerate its containing
 folder in that case.
+
+Stacking a folder writes one file into it: `.imager/stacks.json`, holding the groupings as
+filenames relative to the folder.
+That is what lets a grouping survive the folder being moved or renamed.
+Nothing else is written beside your photos, and the file is only created once you stack something.
+Folders that cannot be written to - a camera card, a read-only mount, a network share - keep their
+groupings in Application Support instead, keyed by path, which means they are lost if the folder
+moves.
 
 ## Project layout
 
