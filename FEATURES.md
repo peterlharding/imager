@@ -273,6 +273,40 @@ large to commit; RAW extensions are gitignored, so a local copy under `data/` wo
 - Slideshow transitions, and a random order option.
 - Compare two images side by side.
 
+## Settings
+
+- **Editable keyboard shortcuts.**
+  Let the shortcut on a menu command be changed and remembered, rather than being fixed at build
+  time.
+
+  The motivating case is concrete: Set Pick shipped on ⌘\ in v1.2.0 and never reached Imager,
+  because another installed application had claimed it.
+  That is not a bug that can be fixed once.
+  Which shortcuts are already taken depends on what else is installed, so no set of defaults is
+  right for everybody, and the only durable answer is to let the shortcut be changed without a
+  rebuild.
+
+  **Check the built-in route before building anything.**
+  macOS already does this: System Settings ▸ Keyboard ▸ Keyboard Shortcuts ▸ App Shortcuts adds a
+  shortcut to any menu item, matched on its exact title, for a chosen app or for all of them.
+  It costs no code and it already works today.
+  If it does, this becomes a README paragraph rather than a settings pane, and the honest version
+  of the feature might be a Settings button that opens that panel.
+  Worth ten minutes with the actual app before designing anything.
+
+  If an in-app version is still wanted:
+
+  - The stored form is a character plus a modifier set, not a `KeyboardShortcut` — that is not
+    `Codable`. Reconstructing one is straightforward; what needs checking is whether SwiftUI
+    re-reads `.keyboardShortcut` when the stored value changes, or whether the menu has to be
+    rebuilt for it to take.
+  - Conflicts *within* Imager can be detected and refused. Conflicts with other applications
+    cannot be seen at all, so the failure the user meets is a shortcut that silently does nothing,
+    exactly as ⌘\ did. The interface should assume that and make reassignment easy rather than try
+    to prevent it.
+  - Menu enablement and shortcuts are among the things the test suite cannot see, so this needs a
+    run of the real app to confirm anything.
+
 ## Project
 
 - **Verify on an older macOS.** The build targets 14.0, but Imager has only ever been run on 26.x,
