@@ -17,6 +17,44 @@ Numbering follows [RELEASING.md](RELEASING.md), where a new feature is a MINOR b
 for backward-compatible fixes only. That is why these are minor releases rather than 0.18.x: they
 all carry features.
 
+## v1.2.0 — stacks
+
+Group a burst or a bracket so the set collapses to a single pick in the sidebar, expanding when the
+rest is wanted. From Aperture. The point is that a shoot of 400 frames where 300 are near-duplicates
+browses as the hundred pictures actually taken, without deleting the alternatives.
+
+**Storage, settled.** A `.imager/` directory beside the photos, holding `stacks.json`.
+
+- Named for the app rather than the feature, so it can hold future per-folder state without
+  breeding dot-directories, and so it will not collide with another tool's `.stacks`.
+- **Filenames stored relative to the folder.** This is what makes the whole choice worthwhile: the
+  grouping survives the folder being moved or renamed, which is the only reason to prefer this over
+  Application Support. Absolute paths would throw that away and leave the harder option with no
+  advantage.
+- `imageURLs(in:)` already passes `.skipsHiddenFiles`, so the directory is invisible to browsing,
+  slideshows and batch with no change.
+- Versioned and tolerantly decoded, as recipes are.
+
+**When the folder cannot be written** — a camera card, a read-only mount, a network share — fall
+back to Application Support keyed by the folder's path. Silently losing the grouping is the worst
+outcome, so the fallback matters more than its tidiness.
+
+**Reconcile on load.** Drop names that no longer exist, since files get deleted in Finder, and drop
+any stack left with fewer than two members.
+
+**Auto-stacking by capture time** is the feature that makes it worth having, and is nearly free:
+EXIF capture time is already extracted for the info inspector, so grouping is a sort and a scan.
+Aperture had a slider — set it to two seconds and every burst becomes a stack — which is worth
+copying.
+
+**Still to decide** before building: whether a slideshow shows only picks, whether Process Folder
+runs on picks or on everything, and whether Move to Trash on a collapsed stack takes the pick or the
+whole set.
+
+**Will need a real run.** Writing into a browsed folder is something Imager has never done. The
+entitlement is `user-selected.read-write` so it should be permitted, but that is reasoning, not
+evidence, and this is the fifth feature to run through sandbox territory the test suite cannot see.
+
 ## v0.19.0 — folder housekeeping — **shipped**
 
 - Move to Trash while browsing a folder.
@@ -197,19 +235,8 @@ large to commit; RAW extensions are gitignored, so a local copy under `data/` wo
 - Parallel batch processing. Sequential was chosen to keep memory bounded on folders of 24 MP
   files; revisit only if a real batch turns out to be slower than the disk.
 - Recursive folder browsing, including subfolders.
-- **Stacks**, as Aperture had: group a burst or a bracket so the set collapses to a single pick in
-  the sidebar, expanding when you want the rest.
-  A good fit alongside Move to Trash for culling, and Aperture's auto-stacking by capture time is
-  within reach — the EXIF date is already extracted for the info inspector.
-
-  The real question is where stacks live. They are not a property of any file, so they need
-  storing somewhere: alongside the folder, which means writing into a folder Imager otherwise only
-  reads, or in Application Support keyed by folder, which is tidier but is lost if the folder
-  moves. Worth settling before building.
-
-  Also decide how stacks meet what already exists: whether a slideshow shows only picks, whether
-  Process Folder runs on picks or on everything, and whether Move to Trash on a collapsed stack
-  takes the pick or the whole set.
+- **Stacks**: group a burst or bracket so the set collapses to a single pick.
+  Planned in detail — see v1.2.0 under Plan.
 
 ## Viewing
 
