@@ -47,9 +47,16 @@ EXIF capture time is already extracted for the info inspector, so grouping is a 
 Aperture had a slider — set it to two seconds and every burst becomes a stack — which is worth
 copying.
 
-**Still to decide** before building: whether a slideshow shows only picks, whether Process Folder
-runs on picks or on everything, and whether Move to Trash on a collapsed stack takes the pick or the
-whole set.
+**How stacks meet what already exists**, settled. Stacking is a photographic idea rather than a
+file-management one, so the features that present a folder follow the picks:
+
+- **A slideshow shows picks only** — the hundred pictures taken, not the four hundred frames. Every
+  frame stays reachable by expanding the stack.
+- **Process Folder runs on picks only**, for the same reason and so a batch does not spend minutes
+  developing frames that were stacked away.
+- **Move to Trash takes only the pick**, promoting the next frame to replace it. Deliberately the
+  conservative one: it never destroys anything not visible at the time, at the cost of several
+  presses to bin a whole bad burst. A whole-stack command can follow later if that proves annoying.
 
 **Will need a real run.** Writing into a browsed folder is something Imager has never done. The
 entitlement is `user-selected.read-write` so it should be permitted, but that is reasoning, not
