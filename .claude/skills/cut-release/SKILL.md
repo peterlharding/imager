@@ -89,6 +89,29 @@ Create them oldest-first when publishing several, so "Latest" lands on the newes
 installed and authenticated as `peterlharding` over SSH. `gh auth login` is interactive - ask the
 user to run it with `! gh auth login` rather than attempting it.
 
+## When an answer does not fit, check before acting on it
+
+PLH's keyboard sometimes drops or mangles characters. If a value, name or version in his reply
+contradicts something already established, stop and confirm rather than acting on it — and
+especially rather than reshaping the work to accommodate it.
+
+The signal is **contradiction with a known fact**, not mere surprise:
+
+- a number outside a range that was just stated
+- a version that does not exist, or is lower than the current one
+- a filename or recipe name that does not match anything present
+- an instruction that undoes something agreed a moment earlier
+
+Name the specific inconsistency: *"40 is below the 60 minimum — did you mean 140?"*
+Do not substitute a different interpretation of your own. On 2026-07-31 the answer "40pt is good"
+came back to a question about a 140 pt default, with 60 documented as the minimum one message
+earlier. The out-of-range value was the tell; instead of naming it I asked whether he had meant a
+radius rather than a diameter, then lowered the minimum so the suspect value would fit. He meant
+140.
+
+This is not licence to second-guess every input. Ordinary answers, including terse or surprising
+ones, are taken at face value.
+
 ## Two standing notes
 
 - PLH's global "never hand-edit CHANGELOG.md" rule does **not** apply to this repo. There is no
