@@ -230,6 +230,58 @@ struct StackBrowsingTests {
         #expect(fixture.model.visibleImages.isEmpty)
     }
 
+    // MARK: - Auto-stacking a folder
+
+    /// Capture times are handed in rather than read here, which is the point: reading them is the
+    /// expensive part, and the sheet has already done it to show what the grouping would be.
+    @Test("Auto-stacking groups the folder and writes it out")
+    func autoStackApplies() {
+        let fixture = makeFixture()
+        fixture.model.openFolder(fixture.directory)
+        let start = Date(timeIntervalSince1970: 1_741_012_200)
+        let dated: [(name: String, date: Date?)] = [
+            ("image1.png", start), ("image2.png", start.addingTimeInterval(1)),
+            ("image3.png", start.addingTimeInterval(600)),
+            ("image4.png", start.addingTimeInterval(900)), ("image5.png", start.addingTimeInterval(901)),
+            ("image6.png", start.addingTimeInterval(1800)),
+        ]
+
+        fixture.model.autoStack(dated: dated, within: 2)
+
+        #expect(fixture.model.stacks.map(\.count) == [2, 2])
+        #expect(names(fixture.model.visibleImages)
+                == ["image1.png", "image3.png", "image4.png", "image6.png"])
+        let onDisk = Stacks.load(for: fixture.directory, available: (1...6).map { "image\($0).png" })
+        #expect(onDisk == fixture.model.stacks)
+    }
+
+    @Test("Auto-stacking replaces whatever grouping was there")
+    func autoStackReplaces() {
+        let fixture = makeFixture()
+        openWithStack(fixture, frames: ["image5.png", "image6.png"], pick: "image5.png")
+        let start = Date(timeIntervalSince1970: 1_741_012_200)
+
+        fixture.model.autoStack(
+            dated: [("image1.png", start), ("image2.png", start.addingTimeInterval(1))], within: 2
+        )
+
+        #expect(fixture.model.stacks.count == 1)
+        #expect(fixture.model.stacks[0].frames == ["image1.png", "image2.png"])
+    }
+
+    @Test("Auto-stacking that finds nothing leaves the folder alone")
+    func autoStackFindsNothing() {
+        let fixture = makeFixture()
+        fixture.model.openFolder(fixture.directory)
+
+        fixture.model.autoStack(dated: fixture.model.folderImages.map {
+            (name: $0.lastPathComponent, date: nil)
+        }, within: 2)
+
+        #expect(fixture.model.stacks.isEmpty)
+        #expect(fixture.model.visibleImages.count == 6)
+    }
+
     // MARK: - Trashing a frame
 
     @Test("Trashing a pick hands the stack to a surviving frame")

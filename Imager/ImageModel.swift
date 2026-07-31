@@ -319,10 +319,13 @@ final class ImageModel {
     // MARK: - Stack operations
 
     /// Groups the folder's frames by capture time.
-    func autoStack(within interval: TimeInterval) {
+    ///
+    /// Takes the times already read rather than reading them, because reading them is the
+    /// expensive part - about 18 ms a frame on RAW - and the sheet has to read them anyway to
+    /// show what the grouping would be.
+    func autoStack(dated frames: [(name: String, date: Date?)], within interval: TimeInterval) {
         guard folderURL != nil else { return }
-        let dated = folderImages.map { (name: $0.lastPathComponent, date: Stacks.captureDate(of: $0)) }
-        let grouped = Stacks.autoStack(dated: dated, within: interval)
+        let grouped = Stacks.autoStack(dated: frames, within: interval)
         guard grouped != stacks else { return }
         stacks = grouped
         expandedPicks.removeAll()

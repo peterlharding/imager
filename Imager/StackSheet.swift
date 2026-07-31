@@ -25,12 +25,17 @@ struct StackSheet: View {
         (60, "Same shot - a minute"),
     ]
 
-    /// How the current folder would group at the chosen threshold, worked out from the files
-    /// already listed so the sheet can say what the button will do.
+    /// Capture times for the folder, read once when the sheet appears.
+    ///
+    /// Not a computed property: reading EXIF costs about 18 ms a frame on RAW, so a folder of 500
+    /// takes nine seconds. Re-reading on every redraw - and the summary and the button's enabled
+    /// state each ask - would hang the sheet outright on a real shoot.
+    @State private var dated: [(name: String, date: Date?)]?
+
+    /// How the folder would group at the chosen threshold. Pure once the times are in, so
+    /// changing the threshold is instant.
     private var preview: (stacks: Int, frames: Int) {
-        let dated = model.folderImages.map {
-            (name: $0.lastPathComponent, date: Stacks.captureDate(of: $0))
-        }
+        guard let dated else { return (0, 0) }
         let grouped = Stacks.autoStack(dated: dated, within: interval)
         return (grouped.count, grouped.reduce(0) { $0 + $1.count })
     }
@@ -61,7 +66,7 @@ struct StackSheet: View {
                 Button("Cancel", role: .cancel) { dismiss() }
                     .keyboardShortcut(.cancelAction)
                 Button("Stack") {
-                    model.autoStack(within: interval)
+                    if let dated { model.autoStack(dated: dated, within: interval) }
                     dismiss()
                 }
                 .keyboardShortcut(.defaultAction)
@@ -70,18 +75,30 @@ struct StackSheet: View {
         }
         .padding(20)
         .frame(minWidth: 380)
+        .task {
+            // A folder of RAWs takes seconds to read, so it happens off the main thread and the
+            // sheet says what it is doing meanwhile.
+            dated = await Stacks.captureDates(of: model.folderImages)
+        }
     }
 
     @ViewBuilder private var summary: some View {
-        let result = preview
-        if result.stacks == 0 {
-            // Almost always because the files carry no capture time - scans, screenshots,
-            // anything re-saved by a tool that drops EXIF.
-            Text("Nothing to stack: no frames were taken this close together.")
+        if dated == nil {
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.small)
+                Text("Reading capture times…")
+            }
         } else {
-            Text("^[\(result.stacks) stack](inflect: true) "
-                 + "from ^[\(result.frames) frame](inflect: true). "
-                 + "Any stacks you have now are replaced.")
+            let result = preview
+            if result.stacks == 0 {
+                // Almost always because the files carry no capture time - scans, screenshots,
+                // anything re-saved by a tool that drops EXIF.
+                Text("Nothing to stack: no frames were taken this close together.")
+            } else {
+                Text("^[\(result.stacks) stack](inflect: true) "
+                     + "from ^[\(result.frames) frame](inflect: true). "
+                     + "Any stacks you have now are replaced.")
+            }
         }
     }
 }
