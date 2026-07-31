@@ -353,7 +353,7 @@ None currently open.
 - Full screen — v0.9.0
 - Full-screen slideshow of a folder, with a configurable interval and repeat — v0.13.0
 - Loupe (⌥⌘L): a cursor-following magnifier at one image pixel per point, sized in
-  Settings — unreleased
+  Settings — v1.1.0
 
   From Aperture. Follows the cursor rather than being placed, and shows 1:1 rather than a fixed
   factor, because judging focus means seeing actual pixels.

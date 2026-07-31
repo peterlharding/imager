@@ -9,6 +9,10 @@ Per-release detail lives in the [`release_notes/`](release_notes/) folder.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-31
+
+See [release_notes/1.1.0.md](release_notes/1.1.0.md) for details.
+
 ### Added
 
 - Loupe (View ▸ Show Loupe, ⌥⌘L): a magnifier that follows the cursor and shows one image pixel
@@ -409,7 +413,8 @@ See [release_notes/0.1.0.md](release_notes/0.1.0.md) for details.
 - Display the opened image scaled to fit while preserving aspect ratio.
 - Empty state prompting how to open an image, and an error alert for unreadable files.
 
-[Unreleased]: https://github.com/peterlharding/imager/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/peterlharding/imager/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/peterlharding/imager/releases/tag/v1.1.0
 [1.0.0]: https://github.com/peterlharding/imager/releases/tag/v1.0.0
 [0.22.0]: https://github.com/peterlharding/imager/releases/tag/v0.22.0
 [0.21.0]: https://github.com/peterlharding/imager/releases/tag/v0.21.0
