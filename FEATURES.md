@@ -282,6 +282,19 @@ large to commit; RAW extensions are gitignored, so a local copy under `data/` wo
   the wire and 82 ms could become a second. That is the case where a cache earns its keep, and it
   would argue for Application Support rather than the share itself.
 
+  **The OS cache is per requested size**, much as Windows keeps separate `thumbcache_*.db` buckets.
+  Asking for 256 pt costs full cold time even when 80 pt is already cached, and the 80 pt entry
+  survives, so sizes coexist rather than one being downsampled from another.
+  A 512 pt thumbnail costs barely more than an 80 pt one cold — the expense is opening the file
+  and reaching the embedded preview, not the scaling.
+  Undocumented, so this is observed behaviour on 26.x rather than a contract.
+
+- **A thumbnail size setting is not the layout change it looks like.**
+  Imager requests 80 pt at scale 2. Because the OS cache is per size (above), offering a larger
+  option would land in a different bucket and regenerate every thumbnail from cold — roughly 35
+  seconds of work the first time through a 500-frame RAW folder, then fast for good.
+  Worth doing if wanted, but budget for the first pass rather than treating it as free.
+
 - Generation itself is already lazy and needs no work: `List` realizes only the visible rows and
   each asks for its own, and QuickLook reads a RAW file's embedded preview rather than developing
   the sensor data, which is why a NEF is in the same order as a JPEG rather than hundreds of
