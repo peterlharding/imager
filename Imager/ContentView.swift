@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var showInfo = false
     @State private var showSaveRecipe = false
     @State private var showBatch = false
+    @State private var showStack = false
     @State private var showSidebar = false
     @State private var showRotate = false
     @State private var zoom = ZoomController()
@@ -42,7 +43,8 @@ struct ContentView: View {
             model: model,
             recipes: recipes,
             showSaveRecipe: $showSaveRecipe,
-            showBatch: $showBatch
+            showBatch: $showBatch,
+            showStack: $showStack
         ))
         .focusedSceneValue(\.sidebarVisible, $showSidebar)
         .focusedSceneValue(\.zoomController, zoom)
@@ -204,12 +206,24 @@ struct ContentView: View {
 
     private var thumbnailSidebar: some View {
         List(selection: thumbnailSelection) {
-            ForEach(model.folderImages, id: \.self) { url in
-                ThumbnailRow(url: url)
+            ForEach(model.visibleImages, id: \.self) { url in
+                ThumbnailRow(url: url, stack: stackRole(for: url)) { toggleStack(at: url) }
                     .tag(url)
             }
         }
         .navigationSplitViewColumnWidth(min: 150, ideal: 190, max: 300)
+    }
+
+    /// How a row should present itself: a stack's pick, one of its frames, or an ordinary image.
+    private func stackRole(for url: URL) -> ThumbnailRow.StackRole? {
+        guard let stack = model.stack(containing: url) else { return nil }
+        guard stack.pick == url.lastPathComponent else { return .frame }
+        return .pick(count: stack.count, expanded: model.isExpanded(stack))
+    }
+
+    private func toggleStack(at url: URL) {
+        guard let stack = model.stack(containing: url) else { return }
+        model.toggleExpansion(of: stack)
     }
 
     // MARK: - Bindings
@@ -289,6 +303,7 @@ private struct SheetPresentation: ViewModifier {
     let recipes: RecipeStore
     @Binding var showSaveRecipe: Bool
     @Binding var showBatch: Bool
+    @Binding var showStack: Bool
 
     func body(content: Content) -> some View {
         content
@@ -306,26 +321,75 @@ private struct SheetPresentation: ViewModifier {
             .sheet(isPresented: $showBatch) {
                 BatchSheet(model: model, recipes: recipes)
             }
+            .focusedSceneValue(\.stackSheetVisible, $showStack)
+            .sheet(isPresented: $showStack) {
+                StackSheet(model: model)
+            }
     }
 }
 
 /// A thumbnail + filename row in the folder sidebar.
 private struct ThumbnailRow: View {
+
+    /// What this row is within a stack, when it is in one at all.
+    enum StackRole: Equatable {
+        /// The frame the stack shows, with how many frames it holds.
+        case pick(count: Int, expanded: Bool)
+        /// A frame revealed by expanding a stack.
+        case frame
+    }
+
     let url: URL
+    var stack: StackRole?
+    var onToggle: () -> Void = {}
+
     @State private var thumbnail: NSImage?
 
     var body: some View {
         HStack(spacing: 8) {
+            disclosure
             thumbnailImage
                 .frame(width: 40, height: 40)
                 .clipShape(RoundedRectangle(cornerRadius: 4))
             Text(url.lastPathComponent)
                 .lineLimit(1)
                 .truncationMode(.middle)
+            if case .pick(let count, _) = stack {
+                Spacer(minLength: 4)
+                countBadge(count)
+            }
         }
+        // Frames sit under their pick; the disclosure column keeps thumbnails in one line.
+        .padding(.leading, stack == .frame ? 14 : 0)
         .task(id: url) {
             thumbnail = await ThumbnailProvider.shared.thumbnail(for: url)
         }
+    }
+
+    @ViewBuilder private var disclosure: some View {
+        if case .pick(_, let expanded) = stack {
+            Button(action: onToggle) {
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(expanded ? 90 : 0))
+            }
+            .buttonStyle(.plain)
+            .frame(width: 12)
+            .accessibilityLabel(expanded ? "Collapse Stack" : "Expand Stack")
+        } else {
+            Color.clear.frame(width: 12, height: 1)
+        }
+    }
+
+    private func countBadge(_ count: Int) -> some View {
+        Text("\(count)")
+            .font(.caption2.monospacedDigit())
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 1)
+            .background(Capsule().fill(.quaternary))
+            .accessibilityLabel("^[\(count) frame](inflect: true)")
     }
 
     @ViewBuilder private var thumbnailImage: some View {

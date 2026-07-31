@@ -40,7 +40,9 @@ struct BatchSheet: View {
     // MARK: - Setting up
 
     @ViewBuilder private var setupView: some View {
-        Text("^[\(model.folderImages.count) image](inflect: true) in “\(folderName)”. "
+        // Picks, not every frame: batching a folder should not process the alternatives that
+        // stacking exists to put away.
+        Text("^[\(model.pickImages.count) image](inflect: true) in “\(folderName)”. "
              + "Originals are never changed.")
             .font(.callout)
             .foregroundStyle(.secondary)
@@ -211,7 +213,7 @@ struct BatchSheet: View {
     private func start() {
         guard let destination else { return }
         runner.start(
-            sources: model.folderImages,
+            sources: model.pickImages,
             edits: editsToApply,
             format: format,
             destination: destination,

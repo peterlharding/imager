@@ -209,4 +209,60 @@ struct SlideshowTests {
         #expect(fixture.slideshow.loops == SlideshowSetting.defaultLoop)
         #expect(fixture.slideshow.loops)
     }
+
+    // MARK: - Stacks
+
+    /// A show is a sequence of pictures, not of every frame taken to get them.
+    @Test("A show runs on picks, not on every frame")
+    func showsPicksOnly() {
+        let directory = TestSupport.makeTemporaryDirectory()
+        defer { TestSupport.remove(directory) }
+        for index in 0..<4 {
+            TestSupport.writePNG(
+                TestSupport.solidImage(width: 4, height: 4), named: "image\(index).png", in: directory
+            )
+        }
+        Stacks.save(
+            [ImageStack(frames: ["image1.png", "image2.png"], pick: "image1.png")], for: directory
+        )
+        let suite = UserDefaults(suiteName: "ImagerTests-\(UUID().uuidString)")!
+        let model = ImageModel(recents: RecentFilesStore(defaults: suite))
+        model.openFolder(directory)
+        let slideshow = Slideshow(model: model, defaults: suite)
+
+        slideshow.start()
+        slideshow.advance()
+        #expect(model.url?.lastPathComponent == "image1.png")
+        slideshow.advance()
+        #expect(model.url?.lastPathComponent == "image3.png", "image2 is behind the pick")
+        slideshow.stop()
+    }
+
+    /// Reached by expanding a stack and clicking a frame, then starting a show: the sequence
+    /// has to rejoin at that stack's pick rather than stop dead.
+    @Test("A show started on a hidden frame carries on from its pick")
+    func startingInsideAStack() throws {
+        let directory = TestSupport.makeTemporaryDirectory()
+        defer { TestSupport.remove(directory) }
+        for index in 0..<4 {
+            TestSupport.writePNG(
+                TestSupport.solidImage(width: 4, height: 4), named: "image\(index).png", in: directory
+            )
+        }
+        Stacks.save(
+            [ImageStack(frames: ["image1.png", "image2.png"], pick: "image1.png")], for: directory
+        )
+        let suite = UserDefaults(suiteName: "ImagerTests-\(UUID().uuidString)")!
+        let model = ImageModel(recents: RecentFilesStore(defaults: suite))
+        model.openFolder(directory)
+        model.toggleExpansion(of: try #require(model.stacks.first))
+        model.select(model.folderImages[2])   // image2, a frame rather than the pick
+        let slideshow = Slideshow(model: model, defaults: suite)
+
+        slideshow.start()
+        slideshow.advance()
+
+        #expect(model.url?.lastPathComponent == "image3.png")
+        slideshow.stop()
+    }
 }

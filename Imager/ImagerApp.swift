@@ -108,6 +108,7 @@ private struct AppCommands: Commands {
     @Environment(\.openWindow) private var openWindow
     @FocusedValue(\.saveRecipeSheetVisible) private var saveRecipeSheetVisible
     @FocusedValue(\.batchSheetVisible) private var batchSheetVisible
+    @FocusedValue(\.stackSheetVisible) private var stackSheetVisible
 
     /// Menu bindings onto the model. `model` is a plain reference here rather than
     /// `@Bindable`, so the bindings are made by hand.
@@ -130,6 +131,49 @@ private struct AppCommands: Commands {
     private func editWith(_ app: URL) {
         guard let url = model.url else { return }
         ExternalEditor.open(url, in: app)
+    }
+
+    /// The stack holding the image on screen, if it is in one.
+    private var currentStack: ImageStack? {
+        model.url.flatMap { model.stack(containing: $0) }
+    }
+
+    /// Grouping and ungrouping the folder's frames.
+    ///
+    /// Sits beside Sort Images By because both decide how a folder is presented rather than
+    /// what any one image is.
+    @ViewBuilder private var stacksMenu: some View {
+        Menu("Stacks") {
+            Button("Stack Photos…") { stackSheetVisible?.wrappedValue = true }
+                .disabled(stackSheetVisible == nil || !model.canBrowse)
+
+            Button("Unstack All") { model.unstackAll() }
+                .disabled(model.stacks.isEmpty)
+
+            Divider()
+
+            Button("Set Pick") {
+                if let url = model.url { model.promoteToPick(url) }
+            }
+            .keyboardShortcut("\\", modifiers: .command)
+            .disabled(currentStack.map { $0.pick == model.url?.lastPathComponent } ?? true)
+
+            Button("Unstack") {
+                if let url = model.url { model.unstack(url) }
+            }
+            .disabled(currentStack == nil)
+
+            Divider()
+
+            Button("Expand All Stacks") { model.expandAllStacks() }
+                .disabled(model.stacks.isEmpty)
+
+            Button("Collapse All Stacks") { model.collapseAllStacks() }
+                .disabled(model.stacks.isEmpty)
+        }
+        // Greying the parent alone does not grey what is inside it, so the items above carry
+        // their own conditions too.
+        .disabled(!model.canBrowse)
     }
     @FocusedValue(\.inspectorVisible) private var inspectorVisible
     @FocusedValue(\.sidebarVisible) private var sidebarVisible
@@ -336,6 +380,8 @@ private struct AppCommands: Commands {
                 Toggle("Reversed", isOn: sortReversedBinding)
             }
             .disabled(!model.canBrowse)
+
+            stacksMenu
 
             Divider()
 

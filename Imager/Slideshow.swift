@@ -78,18 +78,32 @@ final class Slideshow {
 
     /// Moves to the next image, wrapping or stopping at the end.
     ///
+    /// Runs on picks: a show is a sequence of pictures, not of every frame taken to get them.
+    ///
     /// Stops rather than advancing when the current image has unsaved edits, so a
     /// running show can never raise the discard confirmation or lose work.
     func advance() {
         guard isRunning else { return }
-        guard model.canBrowse, let current = model.selectionIndex else { return stop() }
         guard !model.hasUnsavedEdits else { return stop() }
 
-        let next = current + 1
-        if next < model.folderImages.count {
-            model.select(next)
+        let picks = model.pickImages
+        guard picks.count > 1,
+              let index = model.selectionIndex, model.folderImages.indices.contains(index) else {
+            return stop()
+        }
+        // Showing a frame inside an expanded stack: rejoin the sequence at that stack's pick.
+        let showing = model.folderImages[index]
+        let here = picks.firstIndex(of: showing)
+            ?? model.stack(containing: showing).flatMap { stack in
+                picks.firstIndex { $0.lastPathComponent == stack.pick }
+            }
+        guard let here else { return stop() }
+
+        let next = here + 1
+        if next < picks.count {
+            model.select(picks[next])
         } else if loops {
-            model.select(0)
+            model.select(picks[0])
         } else {
             stop()
         }

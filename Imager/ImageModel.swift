@@ -95,6 +95,52 @@ final class ImageModel {
     /// True when a folder of more than one image is loaded for navigation.
     var canBrowse: Bool { folderImages.count > 1 }
 
+    /// Groupings of frames in the current folder: bursts, brackets, several tries at one shot.
+    private(set) var stacks: [ImageStack] = []
+
+    /// Picks of the stacks the user has opened up. Not persisted; expansion is a way of looking
+    /// at a folder rather than a fact about it.
+    private var expandedPicks: Set<String> = []
+
+    /// Frame name to the stack holding it, so the derived lists below stay linear.
+    private var stackByFrame: [String: ImageStack] {
+        var map: [String: ImageStack] = [:]
+        for stack in stacks {
+            for frame in stack.frames { map[frame] = stack }
+        }
+        return map
+    }
+
+    /// What the browser shows: the pick of each collapsed stack, every frame of an expanded one,
+    /// and anything unstacked as itself - all in folder order.
+    var visibleImages: [URL] {
+        guard !stacks.isEmpty else { return folderImages }
+        let lookup = stackByFrame
+        return folderImages.filter { url in
+            let name = url.lastPathComponent
+            guard let stack = lookup[name] else { return true }
+            return expandedPicks.contains(stack.pick) || stack.pick == name
+        }
+    }
+
+    /// One frame per stack, plus everything unstacked.
+    ///
+    /// What a slideshow and a batch run on: stacking is a photographic idea, so the features
+    /// that present a folder present the pictures rather than every frame taken to get them.
+    var pickImages: [URL] {
+        guard !stacks.isEmpty else { return folderImages }
+        let lookup = stackByFrame
+        return folderImages.filter { url in
+            let name = url.lastPathComponent
+            guard let stack = lookup[name] else { return true }
+            return stack.pick == name
+        }
+    }
+
+    func stack(containing url: URL) -> ImageStack? { stackByFrame[url.lastPathComponent] }
+
+    func isExpanded(_ stack: ImageStack) -> Bool { expandedPicks.contains(stack.pick) }
+
     let recents: RecentFilesStore
 
     /// How the browsed folder is ordered. Persisted, and re-sorts the folder in place
@@ -232,6 +278,7 @@ final class ImageModel {
         folderAccess = scoped ? folder : nil
         folderURL = folder
         folderImages = images
+        stacks = Stacks.load(for: folder, available: images.map(\.lastPathComponent))
         performSelect(0)
     }
 
@@ -242,20 +289,114 @@ final class ImageModel {
         confirmDiscardingEdits { [self] in performSelect(index) }
     }
 
+    /// Shows a particular file, if it is in the current folder.
+    func select(_ url: URL) {
+        guard let index = folderImages.firstIndex(of: url) else { return }
+        select(index)
+    }
+
     private func performSelect(_ index: Int) {
         guard folderImages.indices.contains(index) else { return }
         selectionIndex = index
         display(folderImages[index], record: false)
     }
 
-    func showNext() {
-        guard let i = selectionIndex else { return }
-        select(min(i + 1, folderImages.count - 1))
+    func showNext() { step(by: 1) }
+
+    func showPrevious() { step(by: -1) }
+
+    /// Steps through what the browser is showing rather than every file in the folder, so
+    /// arrowing past a collapsed stack skips the frames hidden behind its pick.
+    private func step(by offset: Int) {
+        let visible = visibleImages
+        guard let current = selectionIndex.flatMap({ folderImages.indices.contains($0) ? folderImages[$0] : nil }),
+              let here = visible.firstIndex(of: current) else { return }
+        let next = min(max(here + offset, 0), visible.count - 1)
+        guard next != here else { return }
+        select(visible[next])
     }
 
-    func showPrevious() {
-        guard let i = selectionIndex else { return }
-        select(max(i - 1, 0))
+    // MARK: - Stack operations
+
+    /// Groups the folder's frames by capture time.
+    func autoStack(within interval: TimeInterval) {
+        guard folderURL != nil else { return }
+        let dated = folderImages.map { (name: $0.lastPathComponent, date: Stacks.captureDate(of: $0)) }
+        let grouped = Stacks.autoStack(dated: dated, within: interval)
+        guard grouped != stacks else { return }
+        stacks = grouped
+        expandedPicks.removeAll()
+        persistStacks()
+        keepSelectionVisible()
+    }
+
+    /// Makes the shown frame the one its stack presents when collapsed.
+    func promoteToPick(_ url: URL) {
+        let name = url.lastPathComponent
+        guard let index = stacks.firstIndex(where: { $0.contains(name) }), stacks[index].pick != name else { return }
+        // Expansion is keyed by pick, so it has to move with it.
+        let wasExpanded = expandedPicks.remove(stacks[index].pick) != nil
+        stacks[index].pick = name
+        if wasExpanded { expandedPicks.insert(name) }
+        persistStacks()
+    }
+
+    /// Breaks up the stack holding this file, leaving its frames as ordinary images.
+    func unstack(_ url: URL) {
+        let name = url.lastPathComponent
+        guard let index = stacks.firstIndex(where: { $0.contains(name) }) else { return }
+        expandedPicks.remove(stacks[index].pick)
+        stacks.remove(at: index)
+        persistStacks()
+    }
+
+    func unstackAll() {
+        guard !stacks.isEmpty else { return }
+        stacks.removeAll()
+        expandedPicks.removeAll()
+        persistStacks()
+    }
+
+    func toggleExpansion(of stack: ImageStack) {
+        if expandedPicks.remove(stack.pick) == nil { expandedPicks.insert(stack.pick) }
+        keepSelectionVisible()
+    }
+
+    func expandAllStacks() {
+        expandedPicks = Set(stacks.map(\.pick))
+    }
+
+    func collapseAllStacks() {
+        guard !expandedPicks.isEmpty else { return }
+        expandedPicks.removeAll()
+        keepSelectionVisible()
+    }
+
+    /// Moves the selection to the pick when collapsing hides the frame being shown, so the
+    /// browser never highlights a row that is not there.
+    private func keepSelectionVisible() {
+        guard let index = selectionIndex, folderImages.indices.contains(index) else { return }
+        let showing = folderImages[index]
+        guard !visibleImages.contains(showing), let stack = stack(containing: showing),
+              let pick = folderImages.first(where: { $0.lastPathComponent == stack.pick }) else { return }
+        performSelect(folderImages.firstIndex(of: pick) ?? index)
+    }
+
+    /// Brings the grouping back into line with the files present, after one has gone.
+    private func reconcileStacks() {
+        guard !stacks.isEmpty else { return }
+        let reconciled = Stacks.reconcile(stacks, against: folderImages.map(\.lastPathComponent))
+        guard reconciled != stacks else { return }
+        stacks = reconciled
+        expandedPicks.formIntersection(Set(stacks.map(\.pick)))
+        persistStacks()
+    }
+
+    private func persistStacks() {
+        guard let folderURL else { return }
+        if case .failed(let message) = Stacks.save(stacks, for: folderURL) {
+            errorMessage = message
+        }
     }
 
     // MARK: - Internals
@@ -425,8 +566,11 @@ final class ImageModel {
             performClose()
             return
         }
+        // Trashing a frame can promote a pick, or leave a stack too small to remain one.
+        reconcileStacks()
         selectionIndex = nil
         performSelect(min(index, folderImages.count - 1))
+        keepSelectionVisible()
     }
 
     // MARK: - RAW development
@@ -652,6 +796,8 @@ final class ImageModel {
         folderURL = nil
         folderImages = []
         selectionIndex = nil
+        stacks = []
+        expandedPicks = []
     }
 
     // MARK: - Enumeration

@@ -76,6 +76,11 @@ struct BatchSheetKey: FocusedValueKey {
     typealias Value = Binding<Bool>
 }
 
+/// Lets the Stack Photos menu command raise the stacking sheet.
+struct StackSheetKey: FocusedValueKey {
+    typealias Value = Binding<Bool>
+}
+
 extension FocusedValues {
     var inspectorVisible: Binding<Bool>? {
         get { self[InspectorVisibilityKey.self] }
@@ -90,6 +95,11 @@ extension FocusedValues {
     var batchSheetVisible: Binding<Bool>? {
         get { self[BatchSheetKey.self] }
         set { self[BatchSheetKey.self] = newValue }
+    }
+
+    var stackSheetVisible: Binding<Bool>? {
+        get { self[StackSheetKey.self] }
+        set { self[StackSheetKey.self] = newValue }
     }
 
     var sidebarVisible: Binding<Bool>? {
