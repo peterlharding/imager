@@ -268,6 +268,22 @@ large to commit; RAW extensions are gitignored, so a local copy under `data/` wo
   files; revisit only if a real batch turns out to be slower than the disk.
 - Recursive folder browsing, including subfolders.
 
+- **Do not "speed up" thumbnails for large folders. Measured 2026-07-31.**
+  Generation is already lazy — `List` realizes only the visible rows, and each row asks for its
+  own — and a thumbnail costs **12 ms on a 36 MP NEF**, about the same as a JPEG, because
+  QuickLook reads the file's embedded preview rather than developing the sensor data.
+  Prefetching or a faster path would buy nothing.
+  The cache is bounded at 512 with first-in eviction, which is the part that did need doing, since
+  it outlives the folder that filled it.
+
+- **An EXIF capture time costs about 18 ms on RAW against 0.3 ms on JPEG. Measured 2026-07-31.**
+  The reader opens the container either way, so the cost is per file rather than per byte, and a
+  folder of 500 RAWs is roughly nine seconds.
+  Anything needing capture times must read them once and keep them, never from a computed property
+  a view reads while drawing.
+  Stack Photos shipped in v1.2.0 doing exactly that and would have hung on a real shoot; see how
+  `StackSheet` reads them now before writing anything similar.
+
 ## Viewing
 
 - Slideshow transitions, and a random order option.
